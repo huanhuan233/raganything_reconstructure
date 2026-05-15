@@ -35,6 +35,20 @@ class GraphRetrieveNode(BaseNode):
             return [x.strip() for x in s.split(",") if x.strip()]
         return []
 
+    @staticmethod
+    def _as_bool(v: Any, default: bool = False) -> bool:
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, (int, float)):
+            return bool(v)
+        if isinstance(v, str):
+            s = v.strip().lower()
+            if s in {"1", "true", "yes", "y", "on"}:
+                return True
+            if s in {"0", "false", "no", "n", "off"}:
+                return False
+        return default
+
     @classmethod
     def metadata(cls) -> NodeMetadata:
         return NodeMetadata(
@@ -69,6 +83,15 @@ class GraphRetrieveNode(BaseNode):
                     required=False,
                     default="",
                     description="默认从 knowledge.select 输出 selected_knowledge.graph_workspace 读取。",
+                ),
+                NodeConfigField(
+                    name="strict_mode",
+                    label="严格模式",
+                    type="boolean",
+                    required=False,
+                    default=False,
+                    description="开启后禁用 workspace 未命中后的全图重试，以及关键词未命中时的样本兜底。",
+                    advanced=True,
                 ),
                 NodeConfigField(
                     name="query",
@@ -128,6 +151,7 @@ class GraphRetrieveNode(BaseNode):
         workspace = str(self.config.get("workspace") or selected_ws or "").strip()
         impl_mode = str(self.config.get("implementation_mode") or "minimal").strip().lower()
         top_k = max(1, int(self.config.get("top_k") or 20))
+        strict_mode = self._as_bool(self.config.get("strict_mode"), default=False)
 
         adapter = context.adapters.get("lightrag_graph_retrieve")
         if adapter is None:
@@ -148,6 +172,7 @@ class GraphRetrieveNode(BaseNode):
                 workspace=workspace or None,
                 graph_backend=backend,
                 mode=impl_mode,
+                strict_mode=strict_mode,
             )
             graph_results = retrieved.get("graph_results") if isinstance(retrieved, dict) else []
             graph_summary = retrieved.get("graph_summary") if isinstance(retrieved, dict) else {}
@@ -168,6 +193,7 @@ class GraphRetrieveNode(BaseNode):
                     or "adapters.lightrag.graph_retrieve_adapter.GraphRetrieveAdapter"
                 ),
                 "used_original_algorithm": bool(graph_summary.get("used_original_algorithm", False)),
+                "strict_mode": bool(graph_summary.get("strict_mode", strict_mode)),
                 "warnings": [str(x) for x in warnings],
             }
             out_data["graph_results"] = graph_results[:top_k]

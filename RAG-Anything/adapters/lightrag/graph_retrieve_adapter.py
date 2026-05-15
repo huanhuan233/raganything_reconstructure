@@ -75,6 +75,7 @@ class GraphRetrieveAdapter:
         workspace: str | None = None,
         graph_backend: str = "neo4j",
         mode: str = "minimal",
+        strict_mode: bool = False,
     ) -> dict[str, Any]:
         mode_v = str(mode or "minimal").strip().lower()
         backend_v = str(graph_backend or "neo4j").strip().lower() or "neo4j"
@@ -93,6 +94,7 @@ class GraphRetrieveAdapter:
                     "source_algorithm": "lightrag.graph.retrieve.context",
                     "adapter_path": "adapters.lightrag.graph_retrieve_adapter.GraphRetrieveAdapter",
                     "used_original_algorithm": False,
+                    "strict_mode": bool(strict_mode),
                 },
                 "warnings": ["lightrag_context mode is not implemented yet"],
             }
@@ -258,26 +260,32 @@ class GraphRetrieveAdapter:
 
                             entity_rows, relation_rows = _collect_rows(use_workspace_filter=True)
                             if ws and not entity_rows and not relation_rows:
-                                warnings.append(
-                                    "neo4j hint: workspace 过滤未命中，已自动降级为全图范围重试"
-                                )
-                                entity_rows, relation_rows = _collect_rows(use_workspace_filter=False)
-                            if not entity_rows and not relation_rows:
-                                # 关键词完全未命中时，回退到图谱候选样本，避免前端始终 0 结果。
-                                fallback_cy = (
-                                    "MATCH (n) RETURN elementId(n) AS node_eid, properties(n) AS props "
-                                    "ORDER BY coalesce(n.created_at, '') DESC LIMIT 120"
-                                )
-                                for r in sess.run(fallback_cy):
-                                    entity_rows.append(
-                                        {
-                                            "node_id": r.get("node_eid"),
-                                            "props": r.get("props") or {},
-                                            "kw": "",
-                                        }
+                                if strict_mode:
+                                    warnings.append("neo4j strict: workspace 过滤未命中，已跳过全图范围重试")
+                                else:
+                                    warnings.append(
+                                        "neo4j hint: workspace 过滤未命中，已自动降级为全图范围重试"
                                     )
-                                if entity_rows:
-                                    warnings.append("neo4j hint: 关键词未命中，返回图谱候选样本结果")
+                                    entity_rows, relation_rows = _collect_rows(use_workspace_filter=False)
+                            if not entity_rows and not relation_rows:
+                                if strict_mode:
+                                    warnings.append("neo4j strict: 关键词未命中，已禁用图谱候选样本兜底")
+                                else:
+                                    # 关键词完全未命中时，回退到图谱候选样本，避免前端始终 0 结果。
+                                    fallback_cy = (
+                                        "MATCH (n) RETURN elementId(n) AS node_eid, properties(n) AS props "
+                                        "ORDER BY coalesce(n.created_at, '') DESC LIMIT 120"
+                                    )
+                                    for r in sess.run(fallback_cy):
+                                        entity_rows.append(
+                                            {
+                                                "node_id": r.get("node_eid"),
+                                                "props": r.get("props") or {},
+                                                "kw": "",
+                                            }
+                                        )
+                                    if entity_rows:
+                                        warnings.append("neo4j hint: 关键词未命中，返回图谱候选样本结果")
 
                             seen_entity: set[str] = set()
                             seen_relation: set[str] = set()
@@ -365,6 +373,7 @@ class GraphRetrieveAdapter:
                 "source_algorithm": "lightrag.graph.retrieve.minimal",
                 "adapter_path": "adapters.lightrag.graph_retrieve_adapter.GraphRetrieveAdapter",
                 "used_original_algorithm": graph_obj is not None,
+                "strict_mode": bool(strict_mode),
             },
             "warnings": warnings,
         }
