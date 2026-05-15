@@ -1,0 +1,62 @@
+{
+  "workflow_id": "ui-dag",
+  "name": "ui-dag",
+  "description": "",
+  "nodes": [
+    {
+      "id": "wf_ivBIVYvM",
+      "type": "workflow.start",
+      "config": {},
+      "position": {
+        "x": 252,
+        "y": 210
+      },
+      "label": "开始"
+    },
+    {
+      "id": "wf_HAwMuPQ9",
+      "type": "workflow.end",
+      "config": {},
+      "position": {
+        "x": 896,
+        "y": 154
+      },
+      "label": "结束"
+    },
+    {
+      "id": "wf_XjUAkj0F",
+      "type": "document.parse",
+      "config": {
+        "source_path": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything\\RAG-Anything\\Inputs\\【航空行业标准】HB Z 223.3-2003 飞机装配工艺 第3部分 普通铆接 标准.pdf",
+        "parser": "mineru",
+        "parse_method": "auto",
+        "pages_per_split": 2,
+        "doc_id": null,
+        "mock_text": "模拟解析得到的正文片段。"
+      },
+      "position": {
+        "x": 532,
+        "y": 70
+      },
+      "label": "文档解析"
+    }
+  ],
+  "edges": [
+    [
+      "wf_ivBIVYvM",
+      "wf_XjUAkj0F"
+    ],
+    [
+      "wf_XjUAkj0F",
+      "wf_HAwMuPQ9"
+    ]
+  ],
+  "entry_node_ids": [
+    "wf_ivBIVYvM"
+  ],
+  "input_data": {
+    "seed": true
+  },
+  "created_at": "2026-05-09T07:04:05Z",
+  "updated_at": "2026-05-13T13:11:30Z"
+}

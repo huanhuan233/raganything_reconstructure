@@ -1,0 +1,827 @@
+/**
+ * rag-workflow 页面布局（无 scoped）：子组件根节点仍能命中 `.rag-wf-page` 后代选择器。
+ * 浅色遮罩抽屉类名：``.rag-wf-drawer-light-mask``（挂载在 ``ElOverlay`` 上）。
+ */
+
+$rag-top-offset: calc(var(--soy-header-height, 56px) + var(--soy-tab-height, 42px));
+
+/* ========== append-to-body 遮罩 ========== */
+.el-overlay.rag-wf-drawer-light-mask {
+  background-color: rgb(15 23 42 / 12%) !important;
+}
+
+.el-drawer.rag-wf-context-drawer .el-drawer__container {
+  box-shadow: -12px 0 44px rgb(15 23 42 / 7%);
+}
+
+/* 节点配置贴右面板：滑入动画（无遮罩） */
+.rag-wf-node-config-panel-enter-active,
+.rag-wf-node-config-panel-leave-active {
+  transition: transform 200ms ease;
+}
+
+.rag-wf-node-config-panel-enter-from,
+.rag-wf-node-config-panel-leave-to {
+  transform: translateX(100%);
+}
+
+.rag-wf-node-config-panel-enter-to,
+.rag-wf-node-config-panel-leave-from {
+  transform: translateX(0);
+}
+
+/* ========== 页面壳 ========== */
+.rag-wf-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100vh - #{$rag-top-offset});
+  max-height: calc(100vh - #{$rag-top-offset});
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #f7f9fc;
+
+  /* —— 顶栏 —— */
+  .rag-wf-header {
+    flex-shrink: 0;
+    min-height: 44px;
+    height: 48px;
+    max-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 0 16px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    box-sizing: border-box;
+  }
+
+  .rag-wf-header--dify.rag-wf-header {
+    box-shadow: 0 1px 0 rgb(248 250 252 / 80%);
+  }
+
+  .rag-wf-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .rag-wf-header--dify .rag-wf-header-left {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .rag-wf-title {
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
+  .rag-wf-id-tag {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1px 8px;
+    line-height: 1.5;
+    white-space: nowrap;
+    cursor: default;
+    flex-shrink: 0;
+  }
+
+  .rag-wf-id-placeholder {
+    flex-shrink: 0;
+    font-size: 11px !important;
+    padding: 0 8px;
+    height: 22px;
+    line-height: 22px;
+  }
+
+  .rag-wf-meta-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 1px solid #e5e7eb;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .rag-wf-status-line {
+    font-size: 12px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: min(340px, 36vw);
+  }
+
+  .rag-wf-meta-edit-btn {
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .rag-wf-meta-edit-inner {
+    font-size: 12px;
+  }
+
+  .rag-wf-header-right {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .rag-wf-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .rag-wf-more-btn {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #64748b;
+  }
+
+  .rag-wf-more-dots {
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  .rag-wf-drop-danger {
+    color: #b91c1c;
+  }
+
+  .rag-wf-global-querybar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .rag-wf-global-querybar__label {
+    font-size: 12px;
+    color: #64748b;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .rag-wf-global-querybar__input {
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* —— 主舞台：全宽画布 —— */
+  .rag-wf-stage {
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .rag-wf-stage-layout {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .rag-wf-canvas-wrap {
+    flex: 1 1 0;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* —— 左侧悬浮工具栏 —— */
+  .rag-wf-float-toolbar {
+    position: absolute;
+    left: 16px;
+    top: 72px;
+    z-index: 28;
+    width: 40px;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgb(255 255 255 / 98%);
+    border: 1px solid rgb(229 231 235 / 90%);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgb(15 23 42 / 7%);
+    pointer-events: auto;
+  }
+
+  .rag-wf-float-tool-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background 0.12s ease,
+      color 0.12s ease,
+      transform 0.12s ease;
+  }
+
+  .rag-wf-float-tool-btn:hover {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .rag-wf-float-tool-btn.is-active {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .rag-wf-float-tool-btn:active {
+    transform: scale(0.94);
+  }
+
+  .rag-wf-float-tool-ico {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* —— 右上：JSON / 结果 / 记录 图标组 —— */
+  .rag-wf-dock-icons {
+    position: absolute;
+    right: 16px;
+    top: 72px;
+    z-index: 28;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    transition: right 0.2s ease;
+  }
+
+  .rag-wf-dock-icons > * {
+    pointer-events: auto;
+  }
+
+  &.rag-wf-page--node-panel-open .rag-wf-dock-icons {
+    right: calc(420px + 16px + 8px);
+  }
+
+  /* —— 底部胶囊状态 —— */
+  .rag-wf-capsule {
+    position: absolute;
+    z-index: 26;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    background: rgb(255 255 255 / 95%);
+    border: 1px solid rgb(226 232 240 / 90%);
+    border-radius: 999px;
+    box-shadow: 0 6px 20px rgb(15 23 42 / 6%);
+    pointer-events: auto;
+    line-height: 1.35;
+  }
+
+  .rag-wf-capsule-dot {
+    opacity: 0.55;
+    font-weight: 700;
+    padding: 0 1px;
+  }
+
+  .rag-wf-capsule--stats {
+    left: 16px;
+    bottom: 16px;
+  }
+
+  .rag-wf-capsule--zoom {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 16px;
+    gap: 8px;
+  }
+
+  .rag-wf-capsule-zoom-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-size: 15px;
+    line-height: 1;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rag-wf-capsule-zoom-btn:hover {
+    background: #f8fafc;
+    border-color: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .rag-wf-capsule-zoom-val {
+    min-width: 44px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .rag-wf-capsule--run {
+    right: 16px;
+    bottom: 16px;
+
+    &.tone-success {
+      color: #166534;
+      background: rgb(240 253 244 / 95%);
+      border-color: rgb(187 247 208 / 80%);
+    }
+
+    &.tone-error {
+      color: #b91c1c;
+      background: rgb(254 242 242 / 95%);
+      border-color: rgb(254 202 202 / 85%);
+    }
+
+    &.tone-running {
+      color: #1e40af;
+      background: rgb(239 246 255 / 95%);
+      border-color: rgb(191 219 254 / 80%);
+    }
+  }
+
+  /* —— WorkflowRunRecords / Dock 共用 —— */
+  .rag-wf-history-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .rag-wf-history-table {
+    width: 100%;
+  }
+
+  .rag-wf-history-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .rag-wf-np-sub {
+    font-size: 11px;
+    color: #6b7280;
+    word-break: break-all;
+    margin-top: 2px;
+  }
+
+  .rag-wf-np-tags {
+    margin-top: 4px;
+  }
+
+  .rag-wf-np-ph {
+    font-size: 10px;
+    color: #b45309;
+    background: #fffbeb;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* 画布内表单碎片（若在 .rag-wf-page 内） */
+  .rag-wf-field {
+    margin-bottom: 14px;
+  }
+
+  .rag-wf-field-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+
+  .rag-wf-json-pre {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+
+  .rag-wf-label-tip {
+    cursor: help;
+    opacity: 0.65;
+  }
+
+  .rag-wf-hint {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    line-height: 1.45;
+  }
+
+  .rag-wf-select-full {
+    width: 100%;
+  }
+}
+
+.rag-wf-template-list {
+  max-height: 52vh;
+  overflow: auto;
+}
+
+.rag-wf-template-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.rag-wf-template-item {
+  width: 100%;
+  margin-right: 0;
+  height: auto;
+}
+
+.rag-wf-template-item .el-radio__label {
+  width: 100%;
+}
+
+.rag-wf-template-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.rag-wf-template-item-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* ========== 辅助抽屉（JSON/结果/记录） ========== */
+.el-drawer.rag-wf-context-drawer {
+  .el-drawer__body {
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .el-drawer__body.rag-wf-context-drawer-body {
+    display: flex !important;
+  }
+}
+
+.rag-wf-context-drawer-head {
+  width: 100%;
+}
+
+.rag-wf-context-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rag-wf-context-tab {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
+}
+
+.rag-wf-context-tab:hover {
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.rag-wf-context-tab.on {
+  background: #eef4ff;
+  border-color: rgb(147 197 253 / 70%);
+  color: #1d4ed8;
+}
+
+.rag-wf-context-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 16px 20px;
+  box-sizing: border-box;
+}
+
+.rag-wf-context-panel {
+  min-height: 100%;
+}
+
+/* ========== 节点配置：贴右面板（非 Drawer、无遮罩）========== */
+.rag-wf-canvas-wrap .node-config-panel.rag-wf-node-config-shell {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  z-index: 50;
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -8px 0 24px rgb(15 23 42 / 8%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.node-config-panel__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 76px;
+  box-sizing: border-box;
+  padding: 12px 12px 12px 14px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 2;
+}
+
+.node-config-panel__identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.node-config-panel__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #2563eb;
+  background: linear-gradient(160deg, #eef4ff 0%, #f8fafc 100%);
+  border: 1px solid #e5e7eb;
+  line-height: 1;
+}
+
+.node-config-panel__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.node-config-panel__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-config-panel__type {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #5b728a;
+  font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+  word-break: break-all;
+}
+
+.node-config-panel__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.node-config-panel__act-btn.node-config-panel__act-btn {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.node-config-panel__act-btn--plain {
+  border: 1px solid #e5e7eb;
+  background: #fff !important;
+  color: #64748b;
+}
+
+.node-config-panel__act-ico {
+  font-size: 18px;
+}
+
+.node-config-panel__close {
+  width: 32px;
+  height: 32px;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.node-config-panel__close:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.node-config-panel__close-ico {
+  font-size: 20px;
+}
+
+.node-config-panel__tabs-host {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.rag-wf-node-panel-tabs.el-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__header {
+  margin: 0 !important;
+  padding: 0 16px;
+  height: auto;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__nav-scroll {
+  padding: 0;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__nav-wrap::after {
+  height: 1px !important;
+  background-color: #e5e7eb !important;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__active-bar {
+  height: 2px !important;
+  border-radius: 2px;
+  background-color: #2563eb !important;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__item {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  height: 36px;
+  padding: 0 4px !important;
+  margin-right: 18px !important;
+  line-height: 36px;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__item.is-active {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tabs__content,
+.rag-wf-node-panel-tabs.el-tabs .el-tab-pane {
+  height: auto;
+}
+
+.rag-wf-node-panel-tabs.el-tabs .el-tab-pane {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.node-config-panel__tabs-host .rag-wf-config-drawer-root .rag-wf-config-body {
+  padding: 0 !important;
+}
+
+.rag-wf-config-drawer-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.rag-wf-config-drawer-root.is-compact-drawer .rag-wf-config-body {
+  padding: 0;
+}
+
+/* ========== append-to-body 业务弹窗（列表/详情） ========== */
+.rag-wf-load-toolbar {
+  margin-bottom: 10px;
+}
+
+.rag-wf-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.rag-wf-detail-meta strong {
+  margin-right: 4px;
+}
+
+.rag-wf-detail-err {
+  margin-bottom: 12px;
+}
+
+.rag-wf-detail-block {
+  margin-bottom: 12px;
+}
+
+.rag-wf-field-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}

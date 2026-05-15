@@ -1,0 +1,265 @@
+(raga) sysadmin@hpc00:/data/PXY/raganything/RAG-Anything$ python examples/raganything_example.py "/data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf" --parser mineru -q "这份文档的配图都有哪些类型"
+
+RAGAnything example log file: /data/PXY/raganything/RAG-Anything/raganything_example.log
+
+RAGAnything Example
+==============================
+Processing document with multimodal RAG pipeline
+==============================
+INFO: RAGAnything initialized with config:
+INFO:   Working directory: /data/PXY/raganything/RAG-Anything/rag_storage
+INFO:   Parser: mineru
+INFO:   Parse method: auto
+INFO:   Multimodal processing - Image: True, Table: True, Equation: True
+INFO:   Max concurrent files: 1
+INFO: Parser 'mineru' installation verified
+INFO: Initializing LightRAG with parameters: {'working_dir': '/data/PXY/raganything/RAG-Anything/rag_storage'}
+INFO: [] Loaded graph from /data/PXY/raganything/RAG-Anything/rag_storage/graph_chunk_entity_relation.graphml with 3207 nodes, 6095 edges
+INFO:nano-vectordb:Load (3207, 4096) data
+INFO:nano-vectordb:Init {'embedding_dim': 4096, 'metric': 'cosine', 'storage_file': '/data/PXY/raganything/RAG-Anything/rag_storage/vdb_entities.json'} 3207 data
+INFO:nano-vectordb:Load (6095, 4096) data
+INFO:nano-vectordb:Init {'embedding_dim': 4096, 'metric': 'cosine', 'storage_file': '/data/PXY/raganything/RAG-Anything/rag_storage/vdb_relationships.json'} 6095 data
+INFO:nano-vectordb:Load (276, 4096) data
+INFO:nano-vectordb:Init {'embedding_dim': 4096, 'metric': 'cosine', 'storage_file': '/data/PXY/raganything/RAG-Anything/rag_storage/vdb_chunks.json'} 276 data
+INFO: [] Process 668210 KV load full_docs with 2 records
+INFO: [] Process 668210 KV load text_chunks with 276 records
+INFO: [] Process 668210 KV load full_entities with 2 records
+INFO: [] Process 668210 KV load full_relations with 2 records
+INFO: [] Process 668210 KV load entity_chunks with 587 records
+INFO: [] Process 668210 KV load relation_chunks with 460 records
+INFO: [] Process 668210 KV load llm_response_cache with 434 records
+INFO: [] Process 668210 doc status load doc_status with 4 records
+INFO: [] Process 668210 KV load parse_cache with 2 records
+INFO: Multimodal processors initialized with context support
+INFO: Available processors: ['image', 'table', 'equation', 'generic']
+INFO: Context configuration: ContextConfig(context_window=1, context_mode='page', max_context_tokens=2000, include_headers=True, include_captions=True, filter_content_types=['text'])
+INFO: LightRAG, parse cache, and multimodal processors initialized
+INFO: Starting complete document processing: /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Starting document parsing: /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Using cached parsing result for: /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: * Total blocks in cached content_list: 266
+INFO: Content separation complete:
+INFO:   - Text content length: 42618 characters
+INFO:   - Multimodal items count: 42
+INFO:   - Multimodal type distribution: {'list': 13, 'image': 12, 'aside_text': 1, 'page_footnote': 1, 'table': 10, 'equation': 1, 'code': 4}
+INFO: Setting content source for context-aware multimodal processing...
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set for context extraction (format: minerU)
+INFO: Starting text content insertion into LightRAG...
+WARNING: Duplicate document detected: doc-240507b644e25adcf90c134895f1762f (StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf)
+INFO: Created 1 duplicate document records with track_id: insert_20260401_110309_b3d609fa
+WARNING: No new unique documents were found.
+INFO: Preserving 3 failed document entries for manual review
+INFO: No valid documents to process after consistency check
+INFO: Enqueued document processing pipeline stopped
+INFO: Text content insertion complete
+INFO: Document doc-240507b644e25adcf90c134895f1762f multimodal content is already processed
+INFO: Document /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf processing complete!
+INFO: 
+Querying processed document:
+INFO: 
+[Custom Query]: 这份文档的配图都有哪些类型
+INFO: Executing VLM enhanced query: 这份文档的配图都有哪些类型...
+INFO: LLM func: 4 new workers initialized (Timeouts: Func: 180s, Worker: 360s, Health Check: 375s)
+INFO:  == LLM cache == saving: hybrid:keywords:f31f603db8aac78339691bd5559a39c8
+INFO: Embedding func: 8 new workers initialized (Timeouts: Func: 30s, Worker: 60s, Health Check: 75s)
+INFO: Query nodes: 配图, 文档 (top_k:40, cosine:0.2)
+INFO: Local query: 40 entites, 136 relations
+INFO: Query edges: Document illustrations, Types of images, Visual content (top_k:40, cosine:0.2)
+INFO: Global query: 50 entites, 40 relations
+INFO: Raw search results: 84 entities, 161 relations, 0 vector chunks
+INFO: After truncation: 76 entities, 124 relations
+INFO: Selecting 79 from 79 entity-related chunks by vector similarity
+INFO: Find 1 additional chunks in 1 relations (deduplicated 33)
+INFO: Selecting 1 from 1 relation-related chunks by vector similarity
+INFO: Round-robin merged chunks: 80 -> 80 (deduplicated 0)
+WARNING: Rerank is enabled but no rerank model is configured. Please set up a rerank model or set enable_rerank=False in query parameters.
+INFO: Final context: 76 entities, 124 relations, 19 chunks
+INFO: Final chunks S+F/O: E2/1 R1/1 E4/2 E4/3 E2/4 E11/5 E3/6 E4/7 E1/8 E1/9 E1/10 E1/11 E6/12 E2/13 E1/14 E1/15 E1/16 E1/17 E1/18
+INFO: Found 10 image path matches in prompt
+INFO: Processed 10 images for VLM
+INFO: VLM enhanced query completed
+INFO: Answer: 根据提供的Context，这些文档中的配图主要可分为以下五种类型：
+
+### 1. 概念对比示意图
+用于直观展示不同检索范式之间的核心差异。**Figure 1**是典型的对比示意图，左侧展示自然图像检索（如"一只猫坐在沙发上"的语义场景匹配），右侧展示视觉文档检索（如"论文的方法部分"这类细粒度查询），通过颜色编码标注了学术文档中的关键组件（标题、图表、符号、正文），突出视觉文档在信息密度和语义粒度上的独特性。
+
+### 2. 技术架构示意图
+用于解释视觉文档检索系统的技术实现原理。**Figure 2**展示了单向量（Single-Vec）与多向量（Multi-Vec）VDR架构的对比：左侧将整页文档编码为单一向量，右侧则通过分块编码（Patch-level）和后期交互机制（MaxSim）实现细粒度对齐，体现了从密集检索到细粒度交互的技术演进。
+
+### 3. 基准数据集示例图
+用于展示各类视觉文档检索基准中涵盖的文档多样性：
+- **Figure 4**（ViDoRe-V2示例）：包含ESG报告（企业可持续发展文档）、生物医学幻灯片（科学图表与显微图像）和经济报告（政策文件与统计图表）
+- **Figure 5**（JinaVDR示例）：展示多语言、多版式文档，包括德文历史报纸、俄文产品目录、中文城市规划图和阿拉伯信息图表
+- **Figure 6**（Real-MM-RAG示例）：分为财务幻灯片（IBM财务数据表格与饼图）和技术幻灯片（AI演进架构图与FIPS支持的技术架构框图）
+
+### 4. 结构流分类学图示
+来自StructFlowBench的**Figure 1**系列图表，用于可视化多轮对话中轮次间的结构关系，包括：
+- **扩展关系（Expansion）**：展示单轮对话如何分叉为多个并行后续轮次
+- **细化关系（Refinement）**：展示后续轮次如何对前序内容进行修正或深化
+- **无关性（Unrelatedness）**：通过孤立节点展示轮次间缺乏逻辑关联的场景
+
+### 5. 性能评估可视化图表
+**StructFlowBench多模型性能雷达图**展示了13个大型语言模型在8个任务类型和8个约束类别上的性能对比，使用标准化0.0-1.0量尺的多边形雷达图，直观呈现前沿模型（如GPT-4o、Claude-3.5-Sonnet）与开源模型在复杂约束满足场景下的性能差距。
+
+### References
+
+- [1] multimodal_doc.pdf
+- [2] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+
+==================================================
+【你的问题】 这份文档的配图都有哪些类型
+【回答】 根据提供的Context，这些文档中的配图主要可分为以下五种类型：
+
+### 1. 概念对比示意图
+用于直观展示不同检索范式之间的核心差异。**Figure 1**是典型的对比示意图，左侧展示自然图像检索（如"一只猫坐在沙发上"的语义场景匹配），右侧展示视觉文档检索（如"论文的方法部分"这类细粒度查询），通过颜色编码标注了学术文档中的关键组件（标题、图表、符号、正文），突出视觉文档在信息密度和语义粒度上的独特性。
+
+### 2. 技术架构示意图
+用于解释视觉文档检索系统的技术实现原理。**Figure 2**展示了单向量（Single-Vec）与多向量（Multi-Vec）VDR架构的对比：左侧将整页文档编码为单一向量，右侧则通过分块编码（Patch-level）和后期交互机制（MaxSim）实现细粒度对齐，体现了从密集检索到细粒度交互的技术演进。
+
+### 3. 基准数据集示例图
+用于展示各类视觉文档检索基准中涵盖的文档多样性：
+- **Figure 4**（ViDoRe-V2示例）：包含ESG报告（企业可持续发展文档）、生物医学幻灯片（科学图表与显微图像）和经济报告（政策文件与统计图表）
+- **Figure 5**（JinaVDR示例）：展示多语言、多版式文档，包括德文历史报纸、俄文产品目录、中文城市规划图和阿拉伯信息图表
+- **Figure 6**（Real-MM-RAG示例）：分为财务幻灯片（IBM财务数据表格与饼图）和技术幻灯片（AI演进架构图与FIPS支持的技术架构框图）
+
+### 4. 结构流分类学图示
+来自StructFlowBench的**Figure 1**系列图表，用于可视化多轮对话中轮次间的结构关系，包括：
+- **扩展关系（Expansion）**：展示单轮对话如何分叉为多个并行后续轮次
+- **细化关系（Refinement）**：展示后续轮次如何对前序内容进行修正或深化
+- **无关性（Unrelatedness）**：通过孤立节点展示轮次间缺乏逻辑关联的场景
+
+### 5. 性能评估可视化图表
+**StructFlowBench多模型性能雷达图**展示了13个大型语言模型在8个任务类型和8个约束类别上的性能对比，使用标准化0.0-1.0量尺的多边形雷达图，直观呈现前沿模型（如GPT-4o、Claude-3.5-Sonnet）与开源模型在复杂约束满足场景下的性能差距。
+
+### References
+
+- [1] multimodal_doc.pdf
+- [2] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+==================================================
+
+INFO: 
+[Text Query]: What is the main content of the document?
+INFO: Executing VLM enhanced query: What is the main content of the document?...
+WARNING: low_level_keywords is empty
+INFO: Query edges: Document content, Main topic (top_k:40, cosine:0.2)
+INFO: Global query: 48 entites, 40 relations
+INFO: Raw search results: 48 entities, 40 relations, 0 vector chunks
+INFO: After truncation: 48 entities, 40 relations
+INFO: Selecting 58 from 58 entity-related chunks by vector similarity
+INFO: Find no additional relations-related chunks from 40 relations
+INFO: Round-robin merged chunks: 58 -> 58 (deduplicated 0)
+WARNING: Rerank is enabled but no rerank model is configured. Please set up a rerank model or set enable_rerank=False in query parameters.
+INFO: Final context: 48 entities, 40 relations, 20 chunks
+INFO: Final chunks S+F/O: E6/1 E1/2 E2/3 E1/4 E1/5 E1/6 E2/7 E2/8 E1/9 E1/10 E2/11 E1/12 E6/13 E1/14 E3/15 E2/16 E1/17 E2/18 E1/19 E2/20
+INFO: Found 1 image path matches in prompt
+INFO: Processed 1 images for VLM
+INFO: VLM enhanced query completed
+INFO: Answer: Based on the provided context, the main document is a comprehensive academic survey titled **"Unlocking Multimodal Document Intelligence: From Current Triumphs to Future Frontiers of Visual Document Retrieval"**. This paper provides a systematic analysis of Visual Document Retrieval (VDR) methodologies, benchmarks, and emerging trends.
+
+The document is structured into several key sections:
+
+**1. Introduction and Benchmark Perspective**
+The survey begins with an Introduction (Section 1) that establishes the scope of the field, distinguishing Visual Document Retrieval from natural image retrieval by emphasizing fine-grained semantic granularity and complex user intent. Section 2 ("Benchmark Perspective") provides a technical formulation of the VDR task and discusses evaluation protocols, including references to datasets like the *vdr-multilingual-metadataset*.
+
+**2. Analytical Paradigms and Technical Innovations**
+A core component of the survey is the examination of three primary methodological paradigms:
+- **Embedding Models** (detailed in Section 3.1): Covering architectures from unimodal to advanced multimodal models utilizing Multimodal Large Language Models (MLLMs), including techniques like Matryoshka Representation Learning
+- **Reranker Models**
+- **RAG and Agentic Systems**: Exploring retrieval-augmented generation and agent-based approaches for document understanding
+
+The document presents a taxonomy of technical innovations across four levels: Model-level (e.g., ColPali for late-interaction mechanisms), Data-level (e.g., VLM2Vec and MMEB benchmark), Training-level (e.g., jina-embedding-v4 with multi-task learning), and Efficiency-level (e.g., ModernVBERT).
+
+**3. Future Directions and Appendices**
+The survey concludes with discussions on future frontiers, including *Complex_document_intelligence* and the integration of VDR with Visual Document Understanding (VDU). The document includes extensive technical appendices (starting on page 21) covering evaluation metrics, reasoning-intensive benchmarks, common VDR training sets, and the evolutionary synergy between VDU and VDR.
+
+**4. Bibliographic Coverage**
+The document features an extensive bibliography of recent research (2024–2025), citing works on multimodal retrieval, embedding methodologies, and reasoning architectures from venues including CVPR, ACL, and arXiv.
+
+### References
+
+- [1] multimodal_doc.pdf
+- [2] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: 
+[Text Query]: What are the key topics discussed?
+INFO: Executing VLM enhanced query: What are the key topics discussed?...
+INFO: Query nodes: Main subjects, Important themes (top_k:40, cosine:0.2)
+INFO: Local query: 40 entites, 86 relations
+INFO: Query edges: Key topics, Discussions summary (top_k:40, cosine:0.2)
+INFO: Global query: 46 entites, 40 relations
+INFO: Raw search results: 80 entities, 118 relations, 0 vector chunks
+INFO: After truncation: 80 entities, 118 relations
+INFO: Selecting 43 from 43 entity-related chunks by vector similarity
+INFO: Find no additional relations-related chunks from 118 relations
+INFO: Round-robin merged chunks: 43 -> 43 (deduplicated 0)
+WARNING: Rerank is enabled but no rerank model is configured. Please set up a rerank model or set enable_rerank=False in query parameters.
+INFO: Final context: 80 entities, 118 relations, 20 chunks
+INFO: Final chunks S+F/O: E26/1 E1/2 E6/3 E7/4 E12/5 E1/6 E7/7 E3/8 E2/9 E2/10 E1/11 E2/12 E1/13 E6/14 E1/15 E11/16 E1/17 E2/18 E1/19 E1/20
+INFO: Found 4 image path matches in prompt
+INFO: Processed 4 images for VLM
+INFO: VLM enhanced query completed
+INFO: Answer: The provided context discusses two primary research areas: **StructFlowBench**, a benchmark for multi-turn instruction following, and **Visual Document Retrieval (VDR)** in the context of multimodal large language models.
+
+**Subject Domains in StructFlowBench**
+A central focus is the **22 diverse topics** covered by the StructFlowBench dataset. These specific subject areas include: health, history, science, technology, digital media, automotive, astronomy, geography, lifestyle, literature, physics, finance, stocks, law, humanities, entertainment, music, fashion, art, environment, psychology, and a mixed category that incorporates multiple topics [1]. This broad coverage is designed to ensure comprehensive evaluation across multiple domains.
+
+**Multi-Turn Dialogue Structural Analysis**
+The context extensively covers a **six-category structural flow taxonomy** used to classify inter-turn relationships in multi-turn conversations. The six relationship types are: Follow-up, Refinement, Recall, Summary, Expansion, and Unrelatedness [1]. Related topics include intra-turn constraints (such as Content, Style, and Format constraints), the multi-stage dialogue generation workflow (parameter setting, two-step dialogue generation, and constraint extraction), and evaluation criteria comprising Logical Coherence, Goal Clarity, and Transition Naturalness [1].
+
+**Visual Document Retrieval Innovations and Challenges**
+From the multimodal document perspective, key topics include **technical innovations in VDR/Vision-and-Language Retrieval (VLR)** organized across four levels: model-level architectures (e.g., late-interaction mechanisms), data-level strategies (benchmark creation and hard negative mining), training-level objectives (modality-aware training and multi-task learning), and efficiency-level optimizations [2]. The context also addresses future challenges in the field, specifically the Performance-Efficiency Dilemma, integration with Interactive Retrieval and agentic systems, and the need to uncover Scaling Laws for VDR models [2].
+
+### References
+
+* [1] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+* [2] multimodal_doc.pdf
+INFO: 
+[Multimodal Query]: Analyzing performance data in context of document
+INFO: Executing multimodal query: Compare this performance data with any similar results mentioned in the document...
+INFO: Query mode: hybrid
+INFO: Multimodal query cache hit: multimodal_query...
+INFO: Answer: Based on the provided document context, I do not have enough information to answer your query. The performance data for **RAGAnything**, **Traditional_RAG**, and **Baseline** methods (including specific metrics such as 95.2% accuracy and 120ms processing time) is **not present** in the provided **Context**.
+
+While the document contains extensive comparisons of Visual Document Retrieval (VDR) systems—including tables comparing multimodal reranker models (Table 4), VDR benchmarks (Table 2), and analyses of embedding models versus rerankers—it does not reference the specific "RAGAnything" method or the particular performance metrics (accuracy percentages and processing times in milliseconds) described in your query.
+
+The document does discuss performance comparisons in terms of:
+- **Retrieval metrics** such as nDCG, Recall@K, MRR, and ANLCS
+- **Computational characteristics** (e.g., "High" vs. "Low" computation costs in Table 5)
+- **Model parameters** and architectural differences between rerankers
+
+However, none of these correspond to the specific RAGAnything vs. Traditional_RAG comparison with the numerical results you provided.
+INFO: 
+[Multimodal Query]: Mathematical formula analysis
+INFO: Executing multimodal query: Explain this formula and relate it to any mathematical concepts in the document...
+INFO: Query mode: hybrid
+INFO: Multimodal query cache hit: multimodal_query...
+INFO: Answer: Based on the provided context, while the **F1-score** is referenced as a downstream metric in some VDR benchmarks and acknowledged for evaluating classification performance, **the document does not contain its specific formula, its derivation from precision and recall, or its mathematical definition as the harmonic mean of these two metrics**.
+
+### **The F1-Score in the Document's Context**
+
+According to the information in the knowledge base, the **F1-score** is explicitly mentioned in the context of evaluating **Visual Document Understanding (VDU)** and **Retrieval-Augmented Generation (RAG)** systems, not as a core retrieval metric itself.
+*   **Role:** It is listed as a downstream metric used by some VDR benchmarks like **EVisRAG** and **MMLongBench-Doc** to evaluate the final multimodal generation quality of RAG systems [1]. It is a metric for assessing the performance of classification or understanding tasks that *follow* a successful retrieval.
+
+### **Related Mathematical Concepts for Retrieval Metrics**
+
+While the F1-score formula is not detailed, the document extensively defines a suite of primary evaluation metrics for **Visual Document Retrieval (VDR)** systems. The mathematical formulations and concepts for these metrics are thoroughly explained. These include:
+
+*   **Recall@k:** Evaluates the coverage or completeness of relevant documents retrieved. Its formula calculates the average proportion of relevant documents found within the top-k results across all queries. It is a fundamental metric that, along with precision, forms the basis for the F1-score in classification tasks [1].
+*   **Mean Average Precision (mAP):** Provides a comprehensive evaluation of a ranked list by considering both precision and the rank position of each relevant document. It averages the precision-at-relevant-documents across multiple queries to balance precision and recall [1].
+*   **Mean Reciprocal Rank (MRR):** Measures the efficiency of finding the *first* relevant document by averaging the reciprocal of its rank across queries. It emphasizes early success in the ranking [1].
+*   **Normalized Discounted Cumulative Gain (nDCG@k):** A metric that handles graded relevance (documents can be partially relevant) and applies a logarithmic discount to lower-ranked documents, measuring ranking quality against an ideal ranking [1].
+*   **Hit Rate at k (HR@k):** A binary success metric that returns 1 if *at least one* relevant document is found within the top-k results for a query, and 0 otherwise. Its overall score is calculated by averaging these binary indicators across the query set [1].
+*   **Averaged Normalized Longest Common Subsequence (ANLCS):** A sophisticated metric that measures the *textual similarity* between retrieved content and ground-truth evidence, rather than just ranking. It computes an average similarity score by matching ground-truth chunks to the best-matching retrieved chunks [1].
+
+These core VDR metrics are described in **Technical Appendix B (More Details of Evaluation Metrics)** of the document, which provides their detailed mathematical formulas and explanatory lists defining all necessary variables.
+
+**Conclusion:** The document provides a rich framework for evaluating retrieval systems using metrics like **Recall@k** and **mAP**, which are conceptually linked to the components (recall and precision) of the **F1-score**. However, the specific formula, definition as a harmonic mean, and detailed mathematical analysis of the **F1-score** itself cannot be derived from the provided multimodal content, which treats it solely as a downstream application metric for understanding tasks.
+
+### References
+
+- [1] multimodal_doc.pdf
+INFO: Successfully finalized 12 storages
+INFO: Successfully finalized all RAGAnything storages

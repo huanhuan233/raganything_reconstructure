@@ -1,0 +1,76 @@
+{
+  "workflow_id": "default-raganything-runnable",
+  "name": "默认可运行多模态RAG工作流",
+  "description": "文件解析入库并进行问答的默认流程。",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "workflow.start",
+      "config": {},
+      "position": {
+        "x": 80,
+        "y": 100
+      },
+      "label": "开始"
+    },
+    {
+      "id": "insert",
+      "type": "raganything.insert",
+      "config": {
+        "parser": "mineru",
+        "parse_method": "auto",
+        "source_path": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything\\RAG-Anything\\Inputs\\3.pdf",
+        "output_dir": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything\\RAG-Anything\\output"
+      },
+      "position": {
+        "x": 364,
+        "y": 98
+      },
+      "label": "RAG-Anything 入库"
+    },
+    {
+      "id": "query",
+      "type": "rag.query",
+      "config": {
+        "engine": "raganything",
+        "mode": "hybrid",
+        "query": "简述文档主要内容。"
+      },
+      "position": {
+        "x": 644,
+        "y": 98
+      },
+      "label": "RAG 查询"
+    },
+    {
+      "id": "end",
+      "type": "workflow.end",
+      "config": {},
+      "position": {
+        "x": 920,
+        "y": 100
+      },
+      "label": "结束"
+    }
+  ],
+  "edges": [
+    [
+      "start",
+      "insert"
+    ],
+    [
+      "insert",
+      "query"
+    ],
+    [
+      "query",
+      "end"
+    ]
+  ],
+  "entry_node_ids": [
+    "start"
+  ],
+  "input_data": {},
+  "created_at": "2026-05-09T12:07:24Z",
+  "updated_at": "2026-05-09T12:07:24Z"
+}

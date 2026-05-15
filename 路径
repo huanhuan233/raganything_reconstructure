@@ -1,0 +1,718 @@
+(raga) sysadmin@hpc00:/data/PXY/raganything/RAG-Anything$ python examples/raganything_example.py "/data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf" --parser mineru -q "这份文档的核心结论是什么？"
+
+RAGAnything example log file: /data/PXY/raganything/RAG-Anything/raganything_example.log
+
+RAGAnything Example
+==============================
+Processing document with multimodal RAG pipeline
+==============================
+INFO: RAGAnything initialized with config:
+INFO:   Working directory: /data/PXY/raganything/RAG-Anything/rag_storage
+INFO:   Parser: mineru
+INFO:   Parse method: auto
+INFO:   Multimodal processing - Image: True, Table: True, Equation: True
+INFO:   Max concurrent files: 1
+INFO: Parser 'mineru' installation verified
+INFO: Initializing LightRAG with parameters: {'working_dir': '/data/PXY/raganything/RAG-Anything/rag_storage'}
+INFO: [] Loaded graph from /data/PXY/raganything/RAG-Anything/rag_storage/graph_chunk_entity_relation.graphml with 2585 nodes, 4532 edges
+INFO:nano-vectordb:Load (2585, 4096) data
+INFO:nano-vectordb:Init {'embedding_dim': 4096, 'metric': 'cosine', 'storage_file': '/data/PXY/raganything/RAG-Anything/rag_storage/vdb_entities.json'} 2585 data
+INFO:nano-vectordb:Load (4532, 4096) data
+INFO:nano-vectordb:Init {'embedding_dim': 4096, 'metric': 'cosine', 'storage_file': '/data/PXY/raganything/RAG-Anything/rag_storage/vdb_relationships.json'} 4532 data
+INFO:nano-vectordb:Load (226, 4096) data
+INFO:nano-vectordb:Init {'embedding_dim': 4096, 'metric': 'cosine', 'storage_file': '/data/PXY/raganything/RAG-Anything/rag_storage/vdb_chunks.json'} 226 data
+INFO: [] Process 452519 KV load full_docs with 1 records
+INFO: [] Process 452519 KV load text_chunks with 226 records
+INFO: [] Process 452519 KV load full_entities with 1 records
+INFO: [] Process 452519 KV load full_relations with 1 records
+INFO: [] Process 452519 KV load entity_chunks with 420 records
+INFO: [] Process 452519 KV load relation_chunks with 324 records
+INFO: [] Process 452519 KV load llm_response_cache with 322 records
+INFO: [] Process 452519 doc status load doc_status with 3 records
+INFO: [] Process 452519 KV load parse_cache with 1 records
+INFO: Multimodal processors initialized with context support
+INFO: Available processors: ['image', 'table', 'equation', 'generic']
+INFO: Context configuration: ContextConfig(context_window=1, context_mode='page', max_context_tokens=2000, include_headers=True, include_captions=True, filter_content_types=['text'])
+INFO: LightRAG, parse cache, and multimodal processors initialized
+INFO: Starting complete document processing: /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Starting document parsing: /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Using mineru parser with method: auto
+INFO: Detected PDF file, using parser for PDF...
+INFO:raganything.parser:Executing mineru command: mineru -p /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf -o output/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following_2f27aa83 -m auto
+INFO:raganything.parser:[MinerU] 2026-04-01 09:14:18.512 | INFO     | mineru.utils.engine_utils:get_vlm_engine:32 - Using transformers as the inference engine for VLM.
+INFO:raganything.parser:[MinerU] Fetching 14 files:   0%|          | 0/14 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Fetching 14 files: 100%|██████████| 14/14 [00:00<00:00, 31367.66it/s]
+INFO:raganything.parser:[MinerU] 2026-04-01 09:14:26.380 | INFO     | mineru.backend.vlm.utils:set_default_batch_size:103 - gpu_memory: 48 GB, batch_size: 8
+INFO:raganything.parser:[MinerU] 2026-04-01 09:14:26.383 | INFO     | mineru.backend.vlm.vlm_analyze:get_model:218 - get transformers predictor cost: 4.28s
+INFO:raganything.parser:[MinerU] 2026-04-01 09:14:29.259 | INFO     | mineru.backend.hybrid.hybrid_analyze:get_batch_ratio:365 - hybrid batch ratio (auto, vram=48GB): 16
+INFO:raganything.parser:[MinerU] Predict:   0%|          | 0/21 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Predict:  38%|███▊      | 8/21 [01:09<01:52,  8.64s/it]
+INFO:raganything.parser:[MinerU] Predict:  76%|███████▌  | 16/21 [01:42<00:30,  6.03s/it]
+INFO:raganything.parser:[MinerU] Predict: 100%|██████████| 21/21 [02:20<00:00,  6.55s/it]
+INFO:raganything.parser:[MinerU] Predict: 100%|██████████| 21/21 [02:20<00:00,  6.69s/it]
+INFO:raganything.parser:[MinerU] Predict:   0%|          | 0/16 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Predict:   6%|▋         | 1/16 [00:00<00:12,  1.23it/s]
+INFO:raganything.parser:[MinerU] Predict:  19%|█▉        | 3/16 [00:28<02:17, 10.59s/it]
+INFO:raganything.parser:[MinerU] Predict:  25%|██▌       | 4/16 [00:30<01:31,  7.63s/it]
+INFO:raganything.parser:[MinerU] Predict:  69%|██████▉   | 11/16 [01:38<00:46,  9.26s/it]
+INFO:raganything.parser:[MinerU] Predict:  94%|█████████▍| 15/16 [01:48<00:06,  6.60s/it]
+INFO:raganything.parser:[MinerU] Predict: 100%|██████████| 16/16 [01:50<00:00,  5.98s/it]
+INFO:raganything.parser:[MinerU] Predict: 100%|██████████| 16/16 [01:50<00:00,  6.88s/it]
+INFO:raganything.parser:[MinerU] Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 4410.41it/s]
+INFO:raganything.parser:[MinerU] Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 4760.84it/s]
+INFO:raganything.parser:[MinerU] Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 4728.64it/s]
+INFO:raganything.parser:[MinerU] Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] Fetching 7 files: 100%|██████████| 7/7 [00:00<00:00, 44283.75it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:   0%|          | 0/21 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:   5%|▍         | 1/21 [00:00<00:07,  2.59it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:  19%|█▉        | 4/21 [00:00<00:01,  8.87it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:  33%|███▎      | 7/21 [00:00<00:01, 12.74it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:  48%|████▊     | 10/21 [00:00<00:00, 15.30it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:  62%|██████▏   | 13/21 [00:00<00:00, 17.00it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:  76%|███████▌  | 16/21 [00:01<00:00, 18.16it/s]
+INFO:raganything.parser:[MinerU] MFD Predict:  90%|█████████ | 19/21 [00:01<00:00, 18.92it/s]
+INFO:raganything.parser:[MinerU] MFD Predict: 100%|██████████| 21/21 [00:01<00:00, 15.48it/s]
+INFO:raganything.parser:[MinerU] MFR Predict:   0%|          | 0/36 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] MFR Predict:  89%|████████▉ | 32/36 [00:02<00:00, 12.49it/s]
+INFO:raganything.parser:[MinerU] MFR Predict: 100%|██████████| 36/36 [00:04<00:00,  7.12it/s]
+INFO:raganything.parser:[MinerU] MFR Predict: 100%|██████████| 36/36 [00:04<00:00,  8.04it/s]
+INFO:raganything.parser:[MinerU] OCR-det:   0%|          | 0/21 [00:00<?, ?it/s]
+INFO:raganything.parser:[MinerU] OCR-det:   5%|▍         | 1/21 [00:00<00:16,  1.19it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  10%|▉         | 2/21 [00:01<00:12,  1.57it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  14%|█▍        | 3/21 [00:01<00:10,  1.79it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  19%|█▉        | 4/21 [00:01<00:07,  2.40it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  24%|██▍       | 5/21 [00:02<00:05,  2.67it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  29%|██▊       | 6/21 [00:02<00:05,  2.95it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  33%|███▎      | 7/21 [00:02<00:04,  3.13it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  38%|███▊      | 8/21 [00:03<00:04,  3.03it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  43%|████▎     | 9/21 [00:03<00:03,  3.01it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  48%|████▊     | 10/21 [00:03<00:03,  3.22it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  52%|█████▏    | 11/21 [00:03<00:02,  3.74it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  57%|█████▋    | 12/21 [00:04<00:02,  4.49it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  81%|████████  | 17/21 [00:04<00:00,  9.81it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  90%|█████████ | 19/21 [00:04<00:00,  9.39it/s]
+INFO:raganything.parser:[MinerU] OCR-det:  95%|█████████▌| 20/21 [00:04<00:00,  9.36it/s]
+INFO:raganything.parser:[MinerU] OCR-det: 100%|██████████| 21/21 [00:04<00:00,  7.42it/s]
+INFO:raganything.parser:[MinerU] OCR-det: 100%|██████████| 21/21 [00:04<00:00,  4.27it/s]
+INFO:raganything.parser:[MinerU] 2026-04-01 09:18:56.689 | INFO     | mineru.cli.common:_process_output:168 - local output dir is output/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following_2f27aa83/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following/hybrid_auto
+INFO:raganything.parser:[MinerU] Command executed successfully
+INFO:raganything.parser:Found MinerU output in subdirectory: hybrid_auto
+INFO:raganything.parser:Fixing image paths in output/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following_2f27aa83/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following/hybrid_auto/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following_content_list.json with base directory: output/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following_2f27aa83/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following/hybrid_auto
+INFO: Parsing /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf complete! Extracted 266 content blocks
+INFO: Stored parsing result in cache: 399c4e8061d4cf98b775c626bd23b18a
+INFO: 
+Content Information:
+INFO: * Total blocks in content_list: 266
+INFO: * Content block types:
+INFO:   - text: 224
+INFO:   - list: 13
+INFO:   - image: 12
+INFO:   - aside_text: 1
+INFO:   - page_footnote: 1
+INFO:   - table: 10
+INFO:   - equation: 1
+INFO:   - code: 4
+INFO: Content separation complete:
+INFO:   - Text content length: 42618 characters
+INFO:   - Multimodal items count: 42
+INFO:   - Multimodal type distribution: {'list': 13, 'image': 12, 'aside_text': 1, 'page_footnote': 1, 'table': 10, 'equation': 1, 'code': 4}
+INFO: Setting content source for context-aware multimodal processing...
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set for context extraction (format: minerU)
+INFO: Starting text content insertion into LightRAG...
+INFO: Preserving 2 failed document entries for manual review
+INFO: Processing 1 document(s)
+INFO: Extracting stage 1/1: StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Processing d-id: doc-240507b644e25adcf90c134895f1762f
+INFO: Embedding func: 8 new workers initialized (Timeouts: Func: 30s, Worker: 60s, Health Check: 75s)
+INFO: LLM func: 4 new workers initialized (Timeouts: Func: 180s, Worker: 360s, Health Check: 375s)
+INFO:  == LLM cache == saving: default:extract:e29e57dbb1feb2f6d7ad3ca75c65d9d7
+INFO:  == LLM cache == saving: default:extract:b21f99b0624aec223df5244d7b00f3c6
+INFO:  == LLM cache == saving: default:extract:be53ab838ec8f2bdeaf4f8f32afad3a6
+INFO: Chunk 1 of 8 extracted 22 Ent + 13 Rel chunk-960bc8e8dd5f785182c8c47301eaab7b
+INFO:  == LLM cache == saving: default:extract:f9bad4bb2d8256db1d77760688438acc
+INFO: Chunk 2 of 8 extracted 23 Ent + 16 Rel chunk-0922ea7f1ff535d9f1420478033d4421
+INFO:  == LLM cache == saving: default:extract:e2831f200007541c0a3359366283f2bd
+INFO:  == LLM cache == saving: default:extract:971f833b156282f18db0c7a860f5e1dd
+INFO:  == LLM cache == saving: default:extract:e08d41be25167c53f54bc2807e564941
+INFO: Chunk 3 of 8 extracted 26 Ent + 27 Rel chunk-48e1d8c058e651948451ff07466b4ea3
+INFO:  == LLM cache == saving: default:extract:a0bf762423999bbd1312f3e9ee777df0
+INFO:  == LLM cache == saving: default:extract:6bf2508051a770d5f4d697df1aacb511
+INFO: Chunk 4 of 8 extracted 44 Ent + 24 Rel chunk-7f4542f7552ff252c2a98dbb6f68a499
+INFO:  == LLM cache == saving: default:extract:a6a6d8c10ef5f88197189578e876a3da
+INFO: Chunk 5 of 8 extracted 22 Ent + 10 Rel chunk-41723d3c723559b030383287bd2afcb6
+INFO:  == LLM cache == saving: default:extract:e0ea249599bf5f6d3c2777348d718c68
+INFO:  == LLM cache == saving: default:extract:f889d829958f47e1c321d754a45b481e
+INFO:  == LLM cache == saving: default:extract:b5a36e6d3cbb8bdfb7ccc588818ce97d
+INFO:  == LLM cache == saving: default:extract:7972903532da531b24bf590788619b9f
+INFO: Chunk 6 of 8 extracted 16 Ent + 14 Rel chunk-f34873086e410bc91ddfbfc4fb5429b7
+INFO:  == LLM cache == saving: default:extract:b7aed966265c4a0915a9592263fcaecf
+INFO: Chunk 7 of 8 extracted 43 Ent + 17 Rel chunk-187a31c81eefac856b89d0829da99f80
+INFO:  == LLM cache == saving: default:extract:ddca25c3ac3e02c63dccb0706a202a9c
+INFO: Chunk 8 of 8 extracted 30 Ent + 19 Rel chunk-36c9a086871b54051a8444d37ec4bd38
+INFO: Merging stage 1/1: StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Phase 1: Processing 170 entities from doc-240507b644e25adcf90c134895f1762f (async: 8)
+INFO: Merged: `Recall` | 2+1
+INFO: Merged: `GPT-4o` | 1+5
+INFO: Merged: `Evaluation Framework` | 1+1
+INFO: Merged: `Figure 3` | 2+1
+INFO: Merged: `Appendix C` | 2+1
+INFO: Merged: `Appendix A` | 3+1
+INFO: Merged: `Gemini-1.5-Pro` | 1+2
+INFO: Merged: `Evaluation Metrics` | 2+1
+INFO: Merged: `Appendix B` | 5+1
+INFO: Merged: `Table 2` | 1+1
+INFO: Merged: `Complex Reasoning` | 1+1
+INFO: Merged: `RAG (Retrieval-Augmented Generation)` | 1+1
+INFO: Merged: `Limitations` | 1+1
+INFO: Phase 2: Processing 136 relations from doc-240507b644e25adcf90c134895f1762f (async: 8)
+INFO: Phase 3: Updating final 172(170+2) entities and  136 relations from doc-240507b644e25adcf90c134895f1762f
+INFO: Completed merging: 170 entities, 2 extra entities, 136 relations
+INFO: [] Writing graph with 2744 nodes, 4668 edges
+INFO: In memory DB persist to disk
+INFO: Completed processing file 1/1: StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Enqueued document processing pipeline stopped
+INFO: Text content insertion complete
+INFO: Document doc-240507b644e25adcf90c134895f1762f text processing is complete, but multimodal content still needs processing
+INFO: Starting multimodal content processing...
+INFO: Starting to process 42 multimodal content items
+INFO: Multimodal chunk generation progress: 4/42 (9.5%)
+INFO:openai._base_client:Retrying request to /chat/completions in 0.381497 seconds
+INFO: Multimodal chunk generation progress: 8/42 (19.0%)
+INFO: Multimodal chunk generation progress: 12/42 (28.6%)
+INFO: Multimodal chunk generation progress: 16/42 (38.1%)
+INFO:openai._base_client:Retrying request to /chat/completions in 0.917700 seconds
+INFO: Multimodal chunk generation progress: 20/42 (47.6%)
+INFO: Multimodal chunk generation progress: 24/42 (57.1%)
+INFO: Multimodal chunk generation progress: 28/42 (66.7%)
+INFO: Multimodal chunk generation progress: 32/42 (76.2%)
+INFO: Multimodal chunk generation progress: 36/42 (85.7%)
+INFO: Multimodal chunk generation progress: 40/42 (95.2%)
+INFO: Multimodal chunk generation progress: 42/42 (100.0%)
+INFO: Generated descriptions for 42/42 multimodal items using correct processors
+INFO:  == LLM cache == saving: default:extract:1d0239799a4ef79e89efebae020f4be4
+INFO:  == LLM cache == saving: default:extract:38d8cc0bde2fab41b7b95fb143707199
+INFO: Chunk 1 of 42 extracted 8 Ent + 8 Rel chunk-c8b124b9758e4d9a53b3103619c53330
+INFO:  == LLM cache == saving: default:extract:230dd91ad5011f30c5c1ef26e2fe84db
+INFO:  == LLM cache == saving: default:extract:b3bbcec46d648eea909d15ab19511eea
+INFO:  == LLM cache == saving: default:extract:43d65e8f3fef44866a62e7194597688d
+INFO:  == LLM cache == saving: default:extract:ffd2654c37b6a8603decaf0111bb338f
+INFO: Chunk 2 of 42 extracted 11 Ent + 12 Rel chunk-3df4552d420e042766283d5bb9384e0c
+INFO:  == LLM cache == saving: default:extract:93857c77336c7392c6abdc7098acc846
+INFO: Chunk 3 of 42 extracted 14 Ent + 16 Rel chunk-be2ec7a881bf5c8c37c88e713a85aae9
+INFO:  == LLM cache == saving: default:extract:0e60e5c1811cd1b1f30625df16a4d7a4
+INFO:  == LLM cache == saving: default:extract:a0e3f1adeefd3b732c23ace8164ee5ab
+INFO: Chunk 4 of 42 extracted 15 Ent + 14 Rel chunk-d78e3e70fbcbac71127443de161c238a
+INFO:  == LLM cache == saving: default:extract:78470f08c813b61a832ecc0d506c780d
+INFO: Chunk 5 of 42 extracted 11 Ent + 8 Rel chunk-902a9b58495535454932fa42b4cfe0c9
+INFO:  == LLM cache == saving: default:extract:04d79e0e655b8d4a944606e7e25db070
+INFO:  == LLM cache == saving: default:extract:44c756fa0a0c35c670453265155153ba
+INFO:  == LLM cache == saving: default:extract:0f14390474c2c658d2ea301c4ee20bff
+INFO:  == LLM cache == saving: default:extract:316d873d81bfebfd57329668eedff31e
+INFO: Chunk 6 of 42 extracted 7 Ent + 5 Rel chunk-87eac34a4011cff545e5bb8482fa7fa5
+INFO:  == LLM cache == saving: default:extract:0e4aa42008cc4b04f095243e81b00f7c
+INFO: Chunk 7 of 42 extracted 15 Ent + 17 Rel chunk-23082b0335d63617df18a2440c2cd07a
+INFO:  == LLM cache == saving: default:extract:0b55e23a77d54dd64a93526a4be96a39
+WARNING: chunk-c57e9666ece361f955a0a071c136e3c3: Entity name len 310 > 256 chars (Name: '/Data/Pxy/Raganythin...')
+INFO: Chunk 8 of 42 extracted 12 Ent + 10 Rel chunk-c57e9666ece361f955a0a071c136e3c3
+INFO:  == LLM cache == saving: default:extract:04b0afadd8f1a43091b4c9e5aceae2f7
+INFO:  == LLM cache == saving: default:extract:53efcc0907abeb6b8b3e16e1bae3e0e1
+INFO: Chunk 9 of 42 extracted 9 Ent + 8 Rel chunk-06a9fb5e22a8df42ffaca9695c2159ad
+INFO:  == LLM cache == saving: default:extract:f8501b47ad507d25b27588bbf4722f33
+INFO:  == LLM cache == saving: default:extract:0e4e0088aee84989b73472e42fec03e4
+INFO:  == LLM cache == saving: default:extract:432e65cd835a3a2c038ff446405599f4
+INFO:  == LLM cache == saving: default:extract:fbbc8523cfbf1e936422a7efa361d819
+INFO:  == LLM cache == saving: default:extract:617c7cd0e8194aa7227b920ba91db786
+INFO: Chunk 10 of 42 extracted 11 Ent + 9 Rel chunk-bd159ea1d7f85d255f63dfc4dc8b0c8b
+INFO:  == LLM cache == saving: default:extract:286cc1cf8405652a8f247a46855ede0b
+INFO: Chunk 11 of 42 extracted 13 Ent + 18 Rel chunk-66b03e5a86108d0ff4d15b0a2ac54bc4
+INFO:  == LLM cache == saving: default:extract:532486ced12499beccdd5b74d004af3a
+INFO: Chunk 12 of 42 extracted 18 Ent + 18 Rel chunk-bf1eea9201c190f165b19622baf5f64c
+INFO:  == LLM cache == saving: default:extract:2fc7a784a831f1131524467d3bd29a78
+INFO: Chunk 13 of 42 extracted 14 Ent + 17 Rel chunk-a20ea56146f966a9df1d0e579f2e9fab
+INFO:  == LLM cache == saving: default:extract:5821cf478b667e76722fa9b3456995f1
+INFO:  == LLM cache == saving: default:extract:86348accf966695b3120cd1577999bea
+WARNING: chunk-fa1eda44090ddc79ccfae32ad20cf913: LLM output format error; found 5/4 feilds on ENTITY `Transition Naturalness` @ `Concept`
+INFO:  == LLM cache == saving: default:extract:68095d0143748dd72bffe5d76f9c2bf8
+INFO:  == LLM cache == saving: default:extract:939aa90a81a7ea75aa3a441851a43d4e
+INFO: Chunk 14 of 42 extracted 13 Ent + 23 Rel chunk-fa1eda44090ddc79ccfae32ad20cf913
+INFO:  == LLM cache == saving: default:extract:1b65dc1bbf3ccc323957079e71d8f51f
+INFO: Chunk 15 of 42 extracted 15 Ent + 24 Rel chunk-cf9f521c2605dc429482d8601df60f02
+INFO:  == LLM cache == saving: default:extract:6e87d9b83c2babb235f2ca00bd0b151e
+INFO:  == LLM cache == saving: default:extract:df34348acd9bcc35e9366113feb47297
+INFO: Chunk 16 of 42 extracted 25 Ent + 16 Rel chunk-6d2849b90d60758d0d0a027df1334613
+INFO:  == LLM cache == saving: default:extract:13163e7d7e13b8f93bda7b9f231b502c
+INFO: Chunk 17 of 42 extracted 27 Ent + 29 Rel chunk-9e417924fb87754e5b94ccdfb7578e62
+INFO:  == LLM cache == saving: default:extract:04b8bba5955c134b2223031b41a55d7f
+INFO:  == LLM cache == saving: default:extract:5fb07fe20f7bd51225808d80efda23b7
+INFO:  == LLM cache == saving: default:extract:99987bdafdbea14d84b222745d75aaa2
+INFO:  == LLM cache == saving: default:extract:7fe825af15f8fe406af131dadcaf89b9
+INFO:  == LLM cache == saving: default:extract:2ebb330e83bb854f30cb1f900f4d8e4b
+INFO: Chunk 18 of 42 extracted 14 Ent + 12 Rel chunk-4659ba0dedb234d8ed953d110af3f5b2
+INFO:  == LLM cache == saving: default:extract:9eb777c508bc919b86986ab6136571fb
+INFO: Chunk 19 of 42 extracted 14 Ent + 15 Rel chunk-a293cec1558ea52cfa7f20760131969a
+INFO:  == LLM cache == saving: default:extract:ac66e1982a476500b077342509042962
+INFO: Chunk 20 of 42 extracted 15 Ent + 15 Rel chunk-dc98119566d1b184bd0e14fb99b76c84
+INFO:  == LLM cache == saving: default:extract:023934e826646fbc86da3056daf97746
+INFO: Chunk 21 of 42 extracted 17 Ent + 18 Rel chunk-60c2faf42370f4c1d7e2e4dcf885cfdf
+INFO:  == LLM cache == saving: default:extract:349717e32d06203378a537b71593223a
+INFO:  == LLM cache == saving: default:extract:1cac8635ecc921334741880625cf938c
+INFO:  == LLM cache == saving: default:extract:ca59a88b754043a7ae2cd1eb451e1c3a
+INFO:  == LLM cache == saving: default:extract:b8a4d6f016135c993c33ac4eed19c389
+INFO: Chunk 22 of 42 extracted 31 Ent + 33 Rel chunk-10fb0ab1a0559ac574d529ac4d50eb69
+INFO:  == LLM cache == saving: default:extract:d22cfe00a40a315f48fa742f4d9825c5
+INFO: Chunk 23 of 42 extracted 23 Ent + 19 Rel chunk-13297c0ba539d011813469dfd0b3aadd
+INFO:  == LLM cache == saving: default:extract:0a2aa96857beea706307a72b7e5b01e1
+INFO:  == LLM cache == saving: default:extract:391bbaddd122496690e62935fc2297fc
+INFO: Chunk 24 of 42 extracted 35 Ent + 30 Rel chunk-f828837cb556f228384e5d5dbb70d3e8
+INFO:  == LLM cache == saving: default:extract:32033693a2146cd0ac18a2c12758ab70
+INFO: Chunk 25 of 42 extracted 14 Ent + 6 Rel chunk-fb7521c49535eabfa33eea012d9fc1da
+INFO:  == LLM cache == saving: default:extract:368e78899f0763f3dc2578941cbf4e2b
+INFO:  == LLM cache == saving: default:extract:c45889cecc77ac356e87a532e2e22a7e
+INFO:  == LLM cache == saving: default:extract:9c101adb243e0779cf3eff380fecc4fa
+INFO:  == LLM cache == saving: default:extract:616957e1423cdd752613ba049b06b134
+INFO: Chunk 26 of 42 extracted 17 Ent + 17 Rel chunk-af784cdda8bd9d825c338c82e5d37623
+INFO:  == LLM cache == saving: default:extract:51632d043237080c6ab9cc10c3d29d39
+INFO: Chunk 27 of 42 extracted 33 Ent + 39 Rel chunk-910ebb8f21183b452b6ee82e2587da28
+INFO:  == LLM cache == saving: default:extract:58cd2619489b3238b519d0090b8338ff
+INFO: Chunk 28 of 42 extracted 25 Ent + 28 Rel chunk-0809ca9acec62d8454102ef4b77466ed
+INFO:  == LLM cache == saving: default:extract:0f8ff3f7e37f781a46c34492274a9962
+INFO:  == LLM cache == saving: default:extract:7160b14219ed820128974cbfe4f78b47
+INFO:  == LLM cache == saving: default:extract:231eaf54296c191530c0a0646d61cc32
+INFO:  == LLM cache == saving: default:extract:eb50dbebf6169f23eacb0b6b0a1fe7c3
+INFO:  == LLM cache == saving: default:extract:4b0eb9460102df7a94a17c61e9fdee19
+INFO: Chunk 29 of 42 extracted 18 Ent + 23 Rel chunk-e82f8bc9837d36148c02067dbcba2b9f
+INFO:  == LLM cache == saving: default:extract:c0d1f8e60b42b78fe44ffa838a3fea82
+WARNING: chunk-4a4d5fdf470ed93036f3afbd836655b0: Entity name len 306 > 256 chars (Name: '/Data/Pxy/Raganythin...')
+WARNING: chunk-4a4d5fdf470ed93036f3afbd836655b0: Relation entity len 306 > 256 chars (Name: '/Data/Pxy/Raganythin...')
+INFO: Chunk 30 of 42 extracted 37 Ent + 25 Rel chunk-4a4d5fdf470ed93036f3afbd836655b0
+INFO:  == LLM cache == saving: default:extract:64e27be0048c820252a9a039e400e085
+INFO: Chunk 31 of 42 extracted 38 Ent + 26 Rel chunk-1f478ceb8a17d6dc57ca1440c5c6b43e
+INFO:  == LLM cache == saving: default:extract:d73f427341a25756dc1244d5040de461
+INFO:  == LLM cache == saving: default:extract:3aa81dd7bab7faf5bfd7f4d9458ea946
+INFO: Chunk 32 of 42 extracted 39 Ent + 34 Rel chunk-e7b13024705ced10dc819207553a2941
+INFO:  == LLM cache == saving: default:extract:173698ec9120e6a78f8ec3eaa2963fa4
+INFO: Chunk 33 of 42 extracted 18 Ent + 13 Rel chunk-e514a057a40d8fb76602b212ed900ff3
+INFO:  == LLM cache == saving: default:extract:d443d9a8592e3ed65217489168999d3e
+INFO:  == LLM cache == saving: default:extract:8b45850e8987e5783a4826277c1669a8
+INFO: Chunk 34 of 42 extracted 9 Ent + 8 Rel chunk-d8d7517e984969e0e7be9ed3f9f1d19c
+INFO:  == LLM cache == saving: default:extract:9e765c3c3b9a67b9ccd1ea96acc7fcee
+INFO:  == LLM cache == saving: default:extract:1204adee974f868d51f13f5b65ef8a1f
+INFO:  == LLM cache == saving: default:extract:5ce2fcc60d8b0345a08654fe08240f63
+INFO:  == LLM cache == saving: default:extract:a5aa9528da81c1f783f22a57a3dc4b6e
+INFO:  == LLM cache == saving: default:extract:93b8885967d93a288e19b60a3c1a6dd1
+INFO: Chunk 35 of 42 extracted 15 Ent + 9 Rel chunk-853d6676974adf30d7416b42a34e10ad
+INFO:  == LLM cache == saving: default:extract:e8fd95c43855c99fae4ae4737f604228
+INFO: Chunk 36 of 42 extracted 8 Ent + 6 Rel chunk-f8013416d584cf8929e24569b40363ce
+INFO:  == LLM cache == saving: default:extract:23048cb281471a48e70f0527d14c7422
+INFO: Chunk 37 of 42 extracted 30 Ent + 33 Rel chunk-e6e0e4ceb25bdf184ddd9d0a40d8da1e
+INFO:  == LLM cache == saving: default:extract:15f35f54e3d5790fbff8a0f0d17f5931
+INFO: Chunk 38 of 42 extracted 11 Ent + 10 Rel chunk-76cfcea682a21e60f849849f33b5fb3f
+INFO:  == LLM cache == saving: default:extract:223fe6db7aa8d7ca52cc7d18d17b738c
+INFO:  == LLM cache == saving: default:extract:c95ae7e7bbebf85867c92c5d0a93bce7
+INFO: Chunk 39 of 42 extracted 9 Ent + 7 Rel chunk-667ffb979d04a945ab34316e3161a887
+INFO:  == LLM cache == saving: default:extract:f793f73458d760b6e265ec155c40d403
+INFO:  == LLM cache == saving: default:extract:aab677ed04745f4996796a586f2de4a5
+INFO:  == LLM cache == saving: default:extract:ac152ea955622f3f38555e5a67b88ad8
+INFO: Chunk 40 of 42 extracted 13 Ent + 11 Rel chunk-d575c0681474693024cde26ebde059ce
+INFO:  == LLM cache == saving: default:extract:762240d3f721cec95d1c3b81c2326998
+INFO:  == LLM cache == saving: default:extract:9f56e914f013f95f698b322e654c1956
+INFO: Chunk 41 of 42 extracted 12 Ent + 11 Rel chunk-d192764c441c5ff29416d3767218d1f1
+INFO:  == LLM cache == saving: default:extract:87ebf0f1ef411099e7afbe1ef3fb47ab
+INFO: Chunk 42 of 42 extracted 14 Ent + 11 Rel chunk-eb074b8570db611a020e6a32ab490320
+INFO: Extracted entities from 42 multimodal chunks
+INFO: Added 747 belongs_to relations for multimodal entities
+INFO: Merging stage 1/1: StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: Phase 1: Processing 530 entities from doc-240507b644e25adcf90c134895f1762f (async: 8)
+INFO: Merged: `Unrelatedness` | 1+1
+INFO: Merged: `Figure 1` | 2+3
+INFO: Merged: `Visual Analysis` | 2+3
+INFO: Merged: `FollowBench` | 1+1
+INFO: Merged: `InfoBench` | 1+1
+INFO: Merged: `CFBench` | 1+1
+INFO: Merged: `ComplexBench` | 2+1
+INFO: Merged: `MT-Bench-101` | 3+4
+INFO: Merged: `Multi-if` | 1+3
+INFO: Merged: `MT-Eval` | 2+4
+INFO: Merged: `Page_Footnote Content Analysis` | 1+1
+INFO: Merged: `Page_Footnote` | 2+1
+INFO: Merged: `Yi Chang` | 1+1
+INFO: Merged: `Yuan Wu` | 1+1
+INFO: Merged: `Research Paper` | 2+2
+INFO: Merged: `Table 3` | 1+2
+INFO: Merged: `Claude-3.5-Sonnet` | 2+5
+INFO: Merged: `DeepSeek-v3` | 2+1
+INFO:  == LLM cache == saving: default:summary:7f6c0d792926bd633037c0f4ffbe346c
+INFO: LLMmrg: `Structural Flow Taxonomy` | 2+7
+INFO: Merged: `Yi-6B-Chat` | 2+5
+INFO: Merged: `Llama-3.1-8B-Instruct` | 1+2
+INFO: Merged: `Mistral-7B-Instruct-v0.3` | 3+3
+INFO: Merged: `Phi-3.5-mini-instruct` | 1+4
+INFO: Merged: `Follow-up` | 1+4
+INFO: Merged: `Parameter Setting` | 1+1
+INFO: Merged: `Two-Step Dialogue Generation` | 1+1
+INFO:  == LLM cache == saving: default:summary:fbe3560ace308b9c3e54e0d5d622b830
+INFO: LLMmrg: `StructFlowBench` | 5+22
+INFO:  == LLM cache == saving: default:summary:04bfcffa630122f034dac20edcdf967f
+INFO: LLMmrg: `Gemini-1.5-Pro` | 3+5
+INFO: Merged: `Structural Flow Template` | 1+1
+INFO: Merged: `Intermediate Dialogue Plan` | 1+1
+INFO: Merged: `Figure 3` | 3+1
+INFO: Merged: `Image Path` | 4+3
+INFO: Merged: `Captions` | 1+1
+INFO: Merged: `Content Constraint` | 2+5
+INFO: Merged: `Quantity Format Constraint` | 2+3
+INFO: Merged: `Basic Format Constraint` | 2+3
+INFO: Merged: `List Content Analysis` | 1+4
+INFO:  == LLM cache == saving: default:summary:faeae4e417b75d68ca3e2b6bdc01e9e0
+INFO: LLMmrg: `GPT-4o` | 6+9
+INFO: Merged: `Analysis` | 6+1
+INFO: Merged: `Six-Category Structural Flow Taxonomy` | 2+1
+INFO: Merged: `Refinement` | 1+4
+INFO: Merged: `Conversation History` | 1+1
+INFO: Merged: `List Content` | 1+2
+INFO:  == LLM cache == saving: default:summary:972e765e4fea6c0194ac1ae61209508d
+INFO: LLMmrg: `Qwen2.5-7B-Instruct` | 3+5
+INFO: Merged: `Knowledge Retrieval` | 1+3
+INFO:  == LLM cache == saving: default:summary:35ce8023860f3d19a9ab78e3aeb2e55b
+INFO: LLMmrg: `GLM-4-9B-Chat` | 3+5
+INFO:  == LLM cache == saving: default:summary:d48d179b4469a5a279a7ef99db7e2299
+INFO: LLMmrg: `Qwen2.5-14B-Instruct` | 3+5
+INFO: Merged: `Deliverable` | 1+1
+INFO: Merged: `Seed Summarized Prompts` | 1+1
+INFO: Merged: `Output Format` | 1+1
+INFO: Merged: `Expansion` | 1+5
+INFO: Merged: `Aside_Text` | 1+1
+INFO: Merged: `Deepseek-R1-Distill-Qwen-7B` | 2+3
+INFO: Merged: `Llama-3.1-Instruct-8B` | 1+3
+INFO: Merged: `Phi-3.5-Mini-Instruct` | 1+1
+INFO: Merged: `Situation Constraint` | 2+3
+INFO: Merged: `Template Format Constraint` | 2+2
+INFO: Merged: `Statistical Insights` | 1+1
+INFO: Merged: `Figure 2` | 1+1
+INFO: Merged: `List` | 1+1
+INFO: Merged: `Recall Constraint` | 1+3
+INFO: Merged: `Content Type` | 1+1
+INFO: Merged: `Confusion Factor (CF)` | 1+2
+INFO: Merged: `Struct-FlowBench` | 1+3
+INFO: Merged: `Proceedings Of The 62nd Annual Meeting Of The Association For Computational Linguistics` | 1+1
+INFO: Merged: `Bangkok, Thailand` | 1+1
+INFO: Merged: `Association For Computational Linguistics` | 1+1
+INFO: Merged: `Miami, Florida, USA` | 1+1
+INFO:  == LLM cache == saving: default:summary:71a5bfb2ec5dc85d4f74f5712bdb73e2
+INFO: LLMmrg: `Inverse Constraint` | 4+4
+INFO:  == LLM cache == saving: default:summary:d9a878d5379b23f32589f95f42e1e5b5
+INFO: LLMmrg: `Style Constraint` | 4+4
+INFO:  == LLM cache == saving: default:summary:96bf6616bea519c55553a9235b1bd629
+INFO: LLMmrg: `Keyword/Element Constraint` | 4+4
+INFO: Merged: `Constraint` | 2+2
+INFO: Merged: `Page 16` | 1+1
+INFO: Merged: `Summary` | 1+3
+INFO: Merged: `Recall` | 3+3
+INFO: Merged: `Constraint Satisfaction Rate (CSR)` | 1+1
+INFO: Merged: `Instruction Satisfaction Rate (ISR)` | 1+1
+INFO: Merged: `Weighted Constraint Satisfaction Rate (WCSR)` | 1+1
+INFO: Merged: `Decomposed Requirements Following Ratio (DRFR)` | 1+1
+INFO: Merged: `Table 2` | 2+1
+INFO: Merged: `StructFlow-Bench` | 1+2
+INFO: Merged: `References Section` | 3+1
+INFO: Merged: `Academic Paper` | 1+1
+INFO: Merged: `Table 6` | 1+1
+INFO: Merged: `Table 7` | 3+1
+INFO: Merged: `Figure 6` | 1+2
+INFO: Merged: `Multi-turn Instruction Following` | 1+1
+INFO: Merged: `WILD-CHAT` | 1+2
+INFO: Merged: `Complex Scenario Suitability Study` | 1+2
+INFO: Merged: `Figure 5` | 1+1
+INFO: Merged: `Structural Dependencies` | 1+1
+INFO: Merged: `Dual-Constraint Evaluation System` | 3+1
+INFO: Merged: `Reference List` | 1+1
+INFO: Merged: `2024` | 2+1
+INFO: Merged: `2023` | 2+1
+INFO:  == LLM cache == saving: default:summary:a6bb0f51b6cb100b41dcb28dae1299ce
+INFO: LLMmrg: `arXiv` | 6+2
+INFO: Merged: `Association for Computational Linguistics` | 2+1
+INFO: Merged: `Large Language Models` | 1+2
+INFO: Merged: `Multi-Turn Dialogues` | 1+1
+INFO: Merged: `Intent Inference` | 1+1
+INFO: Merged: `Logical Coherence` | 2+2
+INFO: Merged: `Goal Clarity` | 2+2
+INFO: Merged: `Evaluation Framework` | 2+1
+INFO: Merged: `Multi-IF` | 1+1
+INFO: Merged: `Transition Naturalness` | 2+1
+INFO: Merged: `Figure 4` | 1+1
+INFO: Merged: `Caption` | 1+1
+INFO: Merged: `Table Analysis` | 1+1
+INFO: Phase 2: Processing 1447 relations from doc-240507b644e25adcf90c134895f1762f (async: 8)
+INFO: Merged: `Intermediate Dialogue Plan`~`Two-Step Dialogue Generation` | 1+1
+INFO: Merged: `Parameter Setting`~`Structural Flow Template` | 1+1
+INFO: Merged: `GPT-4o`~`Two-Step Dialogue Generation` | 1+1
+INFO: Merged: `StructFlowBench`~`Structural Flow Taxonomy` | 2+2
+INFO: Merged: `GPT-4o`~`StructFlowBench` | 1+2
+INFO: Merged: `Confusion Factor (CF)`~`Struct-FlowBench` | 1+1
+INFO: Merged: `Bangkok, Thailand`~`Proceedings Of The 62nd Annual Meeting Of The Association For Computational Linguistics` | 1+1
+INFO: Merged: `Association For Computational Linguistics`~`Proceedings Of The 62nd Annual Meeting Of The Association For Computational Linguistics` | 1+1
+INFO: Merged: `Deepseek-R1-Distill-Qwen-7B`~`Qwen2.5-7B-Instruct` | 1+1
+INFO: Merged: `Constraint Satisfaction Rate (CSR)`~`Weighted Constraint Satisfaction Rate (WCSR)` | 1+1
+INFO: Chunks appended from relation: `Table`
+INFO: Merged: `Complex Scenario Suitability Study`~`Struct-FlowBench` | 1+2
+INFO: Chunks appended from relation: `Complex Scenario Evaluation Heatmap (Figure 4) (image)`
+INFO: Merged: `Complex Scenario Suitability Study`~`Logical Coherence` | 1+1
+INFO: Merged: `Complex Scenario Suitability Study`~`Goal Clarity` | 1+1
+INFO: Merged: `Complex Scenario Suitability Study`~`Transition Naturalness` | 1+1
+INFO: Chunks appended from relation: `Transition Naturalness`
+INFO: Merged: `Complex Scenario Suitability Study`~`GPT-4o` | 1+1
+INFO: Merged: `MT-Bench-101`~`Struct-FlowBench` | 1+1
+INFO: Merged: `Struct-FlowBench`~`WILD-CHAT` | 1+1
+INFO: Merged: `Logical Coherence`~`StructFlowBench` | 1+1
+INFO: Merged: `Goal Clarity`~`StructFlowBench` | 1+1
+INFO: Merged: `StructFlowBench`~`Transition Naturalness` | 1+1
+INFO: Phase 3: Updating final 530(530+0) entities and  1447 relations from doc-240507b644e25adcf90c134895f1762f
+INFO: Completed merging: 530 entities, 0 extra entities, 1447 relations
+INFO: [] Writing graph with 3207 nodes, 6095 edges
+INFO: In memory DB persist to disk
+INFO: Updated doc_status: added 42 multimodal chunks to standard chunks_list (total chunks: 50)
+INFO: Multimodal content processing complete
+INFO: Document /data/PXY/raganything/RAG-Anything/Inputs/StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf processing complete!
+INFO: 
+Querying processed document:
+INFO: 
+[Custom Query]: 这份文档的核心结论是什么？
+INFO: Executing VLM enhanced query: 这份文档的核心结论是什么？...
+INFO:  == LLM cache == saving: hybrid:keywords:f14a443269d4b9fadda2ed95adffbcbe
+WARNING: low_level_keywords is empty
+INFO: Query edges: Document summary, Core conclusion, Main findings (top_k:40, cosine:0.2)
+INFO: Global query: 56 entites, 40 relations
+INFO: Raw search results: 56 entities, 40 relations, 0 vector chunks
+INFO: After truncation: 56 entities, 40 relations
+INFO: Selecting 72 from 72 entity-related chunks by vector similarity
+INFO: Find no additional relations-related chunks from 40 relations
+INFO: Round-robin merged chunks: 72 -> 72 (deduplicated 0)
+WARNING: Rerank is enabled but no rerank model is configured. Please set up a rerank model or set enable_rerank=False in query parameters.
+INFO: Final context: 56 entities, 40 relations, 20 chunks
+INFO: Final chunks S+F/O: E11/1 E2/2 E1/3 E2/4 E1/5 E1/6 E1/7 E1/8 E5/9 E1/10 E1/11 E3/12 E3/13 E3/14 E2/15 E5/16 E2/17 E1/18 E3/19 E2/20
+INFO: Found 1 image path matches in prompt
+INFO: Processed 1 images for VLM
+INFO: VLM enhanced query completed
+INFO: Answer: 基于提供的上下文，涉及两个主要学术文档的核心结论如下：
+
+### 文档一：多模态文档智能综述（VDR Survey）
+
+该文档的核心结论是：**视觉文档检索（VDR）领域正以前所未有的速度演进，其发展轨迹正从当前的技术 triumphs 转向"复杂文档智能"（Complex Document Intelligence）这一未来前沿**。
+
+具体而言，文档在结论部分（第8页）总结了该领域面临的关键转变和未来方向，包括：
+- **数据前沿**：需要处理更复杂的数据场景
+- **架构创新**：探索新的模型架构和交互机制
+- **效率与交互性**：解决高性能模型的存储与计算资源困境，并朝向与代理系统（Agentic Systems）的交互式检索发展
+- **扩展定律**：需要系统性地研究VDR模型在模型规模和数据特性方面的扩展动态
+
+文档也坦承了本综述的局限性，包括：静态快照可能遗漏同期或极新的工作；为保持叙事连贯性而优先保证广度而非每个引用工作的详尽技术深度；以及范围专注于VDR而非更广泛的视觉文档理解（VDU）领域[1]。
+
+### 文档二：StructFlowBench 基准测试
+
+该文档的核心结论是：**StructFlowBench 是一个创新的结构化流基准测试，通过引入包含六种基本回合间关系（如 Follow-up、Recall、Expansion、Summary 等）的结构流框架和13种细粒度约束类型，系统性地评估大型语言模型在复杂多轮对话中的指令遵循能力**。
+
+关键要点包括：
+- **数据集构成**：包含155个多轮对话，覆盖22个 diverse 主题（如健康、法律、金融、文学等）和8个任务类别（包括事实问答、实用写作、创意写作等）
+- **评估维度**：不仅评估单轮响应质量，更关注跨回合的结构一致性和逻辑合理性，测量逻辑连贯性、目标清晰度和转换自然性等维度
+- **研究价值**：填补了现有LLM评估中对多轮结构化工作流和复杂对话生成能力评估的空白，为评估AI模型在结构化工作流中的表现提供了标准化测试平台[2]。
+
+### References
+
+- [1] multimodal_doc.pdf
+- [2] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+
+==================================================
+【你的问题】 这份文档的核心结论是什么？
+【回答】 基于提供的上下文，涉及两个主要学术文档的核心结论如下：
+
+### 文档一：多模态文档智能综述（VDR Survey）
+
+该文档的核心结论是：**视觉文档检索（VDR）领域正以前所未有的速度演进，其发展轨迹正从当前的技术 triumphs 转向"复杂文档智能"（Complex Document Intelligence）这一未来前沿**。
+
+具体而言，文档在结论部分（第8页）总结了该领域面临的关键转变和未来方向，包括：
+- **数据前沿**：需要处理更复杂的数据场景
+- **架构创新**：探索新的模型架构和交互机制
+- **效率与交互性**：解决高性能模型的存储与计算资源困境，并朝向与代理系统（Agentic Systems）的交互式检索发展
+- **扩展定律**：需要系统性地研究VDR模型在模型规模和数据特性方面的扩展动态
+
+文档也坦承了本综述的局限性，包括：静态快照可能遗漏同期或极新的工作；为保持叙事连贯性而优先保证广度而非每个引用工作的详尽技术深度；以及范围专注于VDR而非更广泛的视觉文档理解（VDU）领域[1]。
+
+### 文档二：StructFlowBench 基准测试
+
+该文档的核心结论是：**StructFlowBench 是一个创新的结构化流基准测试，通过引入包含六种基本回合间关系（如 Follow-up、Recall、Expansion、Summary 等）的结构流框架和13种细粒度约束类型，系统性地评估大型语言模型在复杂多轮对话中的指令遵循能力**。
+
+关键要点包括：
+- **数据集构成**：包含155个多轮对话，覆盖22个 diverse 主题（如健康、法律、金融、文学等）和8个任务类别（包括事实问答、实用写作、创意写作等）
+- **评估维度**：不仅评估单轮响应质量，更关注跨回合的结构一致性和逻辑合理性，测量逻辑连贯性、目标清晰度和转换自然性等维度
+- **研究价值**：填补了现有LLM评估中对多轮结构化工作流和复杂对话生成能力评估的空白，为评估AI模型在结构化工作流中的表现提供了标准化测试平台[2]。
+
+### References
+
+- [1] multimodal_doc.pdf
+- [2] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+==================================================
+
+INFO: 
+[Text Query]: What is the main content of the document?
+INFO: Executing VLM enhanced query: What is the main content of the document?...
+WARNING: low_level_keywords is empty
+INFO: Query edges: Document content, Main topic (top_k:40, cosine:0.2)
+INFO: Global query: 48 entites, 40 relations
+INFO: Raw search results: 48 entities, 40 relations, 0 vector chunks
+INFO: After truncation: 48 entities, 40 relations
+INFO: Selecting 58 from 58 entity-related chunks by vector similarity
+INFO: Find no additional relations-related chunks from 40 relations
+INFO: Round-robin merged chunks: 58 -> 58 (deduplicated 0)
+WARNING: Rerank is enabled but no rerank model is configured. Please set up a rerank model or set enable_rerank=False in query parameters.
+INFO: Final context: 48 entities, 40 relations, 20 chunks
+INFO: Final chunks S+F/O: E6/1 E1/2 E2/3 E1/4 E1/5 E1/6 E2/7 E2/8 E1/9 E1/10 E2/11 E1/12 E6/13 E1/14 E3/15 E2/16 E1/17 E2/18 E1/19 E2/20
+INFO: Found 1 image path matches in prompt
+INFO: Processed 1 images for VLM
+INFO: VLM enhanced query completed
+INFO: Answer: Based on the provided context, the main content is a comprehensive academic survey paper on **Visual Document Retrieval (VDR)** titled **"Unlocking Multimodal Document Intelligence: From Current Triumphs to Future Frontiers of Visual Document Retrieval"** [1]. This document systematically examines the field of VDR, which focuses on retrieving visually rich documents (also referred to as "visual documents" or "document images") that contain complex layouts integrating text, charts, and notation [1].
+
+The survey is organized into several major sections:
+
+**1. Introduction and Scope**
+The document begins with an introductory section (Section 1) that establishes the paper's scope and structure, defining visual documents as a distinct data type requiring specialized retrieval approaches compared to natural images [1].
+
+**2. Benchmark Perspective**
+Section 2 provides a benchmark perspective, including formal mathematical formulations of the VDR task and analysis of evaluation metrics. It discusses the transition from basic VDR settings to advanced topics like multilingual support [1].
+
+**3. Methodological Frameworks**
+The core of the survey analyzes three primary paradigms for document retrieval:
+- **Embedding Models** (Section 3.1): Dense retrieval approaches ranging from unimodal to advanced multimodal models utilizing Multimodal Large Language Models (MLLMs), including techniques like Matryoshka Representation Learning [1]
+- **Reranker Models**: Advanced architectures for refining retrieval results
+- **RAG and Agentic Systems**: Retrieval-Augmented Generation approaches and autonomous agent systems for document understanding [1]
+
+**4. Technical Innovation Taxonomy**
+The document presents a structured taxonomy of recent innovations across four levels [1]:
+- **Model-level**: Novel architectures like ColPali (late-interaction mechanisms) and Unveil (knowledge distillation)
+- **Data-level**: Large-scale training datasets and strategies like "MLLM-as-a-Judge" for hard negative mining
+- **Training-level**: Novel objectives including multi-task learning frameworks and modality-aware training
+- **Efficiency-level**: Development of smaller, efficient models like ModernVBERT challenging the "bigger is better" assumption
+
+**5. Bibliographic Coverage**
+The survey includes extensive bibliographic references (2024-2025) covering recent advances in multimodal retrieval, embedding methodologies, and reasoning architectures [1].
+
+**6. Technical Appendices**
+The document contains supplementary appendices (starting on page 21) providing detailed technical information, including evaluation metric formulations, reasoning-intensive benchmarks, common VDR training sets, and discussions on integrating VDR with RAG and agents [1].
+
+Additionally, the context includes reference to a secondary document, **StructFlowBench**, which appears to be a dataset for evaluating multi-turn instruction following across 22 diverse topics (including health, science, law, literature) and eight task categories (Fact-based Questions, Practical Writing, Creative Writing, etc.) [2].
+
+### References
+
+- [1] multimodal_doc.pdf
+- [2] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following.pdf
+INFO: 
+[Text Query]: What are the key topics discussed?
+INFO: Executing VLM enhanced query: What are the key topics discussed?...
+INFO: Query nodes: Main subjects, Important themes (top_k:40, cosine:0.2)
+INFO: Local query: 40 entites, 85 relations
+INFO: Query edges: Key topics, Discussions summary (top_k:40, cosine:0.2)
+INFO: Global query: 46 entites, 40 relations
+INFO: Raw search results: 80 entities, 117 relations, 0 vector chunks
+INFO: After truncation: 80 entities, 117 relations
+INFO: Selecting 43 from 43 entity-related chunks by vector similarity
+INFO: Find no additional relations-related chunks from 117 relations
+INFO: Round-robin merged chunks: 43 -> 43 (deduplicated 0)
+WARNING: Rerank is enabled but no rerank model is configured. Please set up a rerank model or set enable_rerank=False in query parameters.
+INFO: Final context: 80 entities, 117 relations, 20 chunks
+INFO: Final chunks S+F/O: E26/1 E1/2 E6/3 E7/4 E12/5 E1/6 E7/7 E3/8 E2/9 E2/10 E1/11 E2/12 E1/13 E6/14 E1/15 E12/16 E1/17 E2/18 E1/19 E1/20
+INFO: Found 4 image path matches in prompt
+INFO: Processed 4 images for VLM
+INFO: VLM enhanced query completed
+INFO: Answer: Based on the provided context, the key topics discussed span across two main documents: a benchmark study on multi-turn instruction following (StructFlowBench) and a survey on Visual Document Retrieval (VDR).
+
+### StructFlowBench Dataset Topics
+
+The primary document discusses **StructFlowBench**, a benchmark for evaluating multi-turn instruction following in large language models. The dataset covers **22 diverse subject topics**, ensuring broad domain coverage:
+
+**health, history, science, technology, digital media, automotive, astronomy, geography, lifestyle, literature, physics, finance, stocks, law, humanities, entertainment, music, fashion, art, environment, psychology**, and a **mixed category** that incorporates multiple subjects [1].
+
+### Structural Flow and Constraint Taxonomy
+
+A central topic is the **Six-category Structural Flow Taxonomy** used to classify inter-turn relationships in dialogues. The six structural relationship types are:
+
+- **Follow-up**: Sequential continuation of conversation
+- **Refinement**: Clarification or improvement of previous content
+- **Recall**: Referencing or summarizing non-sequential previous turns
+- **Summary**: Consolidating content from multiple preceding turns into a cohesive overview
+- **Expansion**: Branching into subtopics mentioned in previous turns
+- **Unrelatedness**: Turns with no structural dependencies or logical relationships [1]
+
+The document also extensively discusses **constraint types**, categorized into:
+- **Intra-turn constraints** (8 types): Inverse, Style, Situation, Keyword/Element, Basic Format, Quantity Format, Template Format, and Content constraints
+- **Multi-turn structural constraints** (5 types): Follow-up, Refinement, Recall, Expansion, and Summary constraints [1]
+
+### Dialogue Generation and Evaluation
+
+Other key topics include the **Multi-Stage Dialogue Generation Workflow**, comprising parameter setting, two-step dialogue generation (intermediate dialogue plans and complete dialogues), and constraint extraction/addition [1].
+
+The evaluation methodology covers **Complex Scenario Suitability** assessed through three criteria: **Logical Coherence**, **Goal Clarity**, and **Transition Naturalness** [1].
+
+### Visual Document Retrieval (VDR)
+
+The second document focuses on **Visual Document Retrieval** in the Multimodal Large Language Model (MLLM) era, discussing:
+- **Technical innovations** across four levels: Model-level (e.g., ColPali), Data-level (e.g., VLM2Vec), Training-level (e.g., jina-embedding-v4), and Efficiency-level optimizations [2]
+- **Future challenges** including the Performance-Efficiency Dilemma, Interactive Retrieval systems, and uncovering Scaling Laws for VDR [2]
+- **Dense Retrieval** mechanisms and multimodal embedding methodologies [2]
+
+### References
+
+- [1] StructFlowBench- A Structured Flow Benchmark for Multi - turn Instruction Following
+- [2] multimodal_doc.pdf
+INFO: 
+[Multimodal Query]: Analyzing performance data in context of document
+INFO: Executing multimodal query: Compare this performance data with any similar results mentioned in the document...
+INFO: Query mode: hybrid
+INFO: Multimodal query cache hit: multimodal_query...
+INFO: Answer: Based on the provided document context, I do not have enough information to answer your query. The performance data for **RAGAnything**, **Traditional_RAG**, and **Baseline** methods (including specific metrics such as 95.2% accuracy and 120ms processing time) is **not present** in the provided **Context**.
+
+While the document contains extensive comparisons of Visual Document Retrieval (VDR) systems—including tables comparing multimodal reranker models (Table 4), VDR benchmarks (Table 2), and analyses of embedding models versus rerankers—it does not reference the specific "RAGAnything" method or the particular performance metrics (accuracy percentages and processing times in milliseconds) described in your query.
+
+The document does discuss performance comparisons in terms of:
+- **Retrieval metrics** such as nDCG, Recall@K, MRR, and ANLCS
+- **Computational characteristics** (e.g., "High" vs. "Low" computation costs in Table 5)
+- **Model parameters** and architectural differences between rerankers
+
+However, none of these correspond to the specific RAGAnything vs. Traditional_RAG comparison with the numerical results you provided.
+INFO: 
+[Multimodal Query]: Mathematical formula analysis
+INFO: Executing multimodal query: Explain this formula and relate it to any mathematical concepts in the document...
+INFO: Query mode: hybrid
+INFO: Multimodal query cache hit: multimodal_query...
+INFO: Answer: Based on the provided context, while the **F1-score** is referenced as a downstream metric in some VDR benchmarks and acknowledged for evaluating classification performance, **the document does not contain its specific formula, its derivation from precision and recall, or its mathematical definition as the harmonic mean of these two metrics**.
+
+### **The F1-Score in the Document's Context**
+
+According to the information in the knowledge base, the **F1-score** is explicitly mentioned in the context of evaluating **Visual Document Understanding (VDU)** and **Retrieval-Augmented Generation (RAG)** systems, not as a core retrieval metric itself.
+*   **Role:** It is listed as a downstream metric used by some VDR benchmarks like **EVisRAG** and **MMLongBench-Doc** to evaluate the final multimodal generation quality of RAG systems [1]. It is a metric for assessing the performance of classification or understanding tasks that *follow* a successful retrieval.
+
+### **Related Mathematical Concepts for Retrieval Metrics**
+
+While the F1-score formula is not detailed, the document extensively defines a suite of primary evaluation metrics for **Visual Document Retrieval (VDR)** systems. The mathematical formulations and concepts for these metrics are thoroughly explained. These include:
+
+*   **Recall@k:** Evaluates the coverage or completeness of relevant documents retrieved. Its formula calculates the average proportion of relevant documents found within the top-k results across all queries. It is a fundamental metric that, along with precision, forms the basis for the F1-score in classification tasks [1].
+*   **Mean Average Precision (mAP):** Provides a comprehensive evaluation of a ranked list by considering both precision and the rank position of each relevant document. It averages the precision-at-relevant-documents across multiple queries to balance precision and recall [1].
+*   **Mean Reciprocal Rank (MRR):** Measures the efficiency of finding the *first* relevant document by averaging the reciprocal of its rank across queries. It emphasizes early success in the ranking [1].
+*   **Normalized Discounted Cumulative Gain (nDCG@k):** A metric that handles graded relevance (documents can be partially relevant) and applies a logarithmic discount to lower-ranked documents, measuring ranking quality against an ideal ranking [1].
+*   **Hit Rate at k (HR@k):** A binary success metric that returns 1 if *at least one* relevant document is found within the top-k results for a query, and 0 otherwise. Its overall score is calculated by averaging these binary indicators across the query set [1].
+*   **Averaged Normalized Longest Common Subsequence (ANLCS):** A sophisticated metric that measures the *textual similarity* between retrieved content and ground-truth evidence, rather than just ranking. It computes an average similarity score by matching ground-truth chunks to the best-matching retrieved chunks [1].
+
+These core VDR metrics are described in **Technical Appendix B (More Details of Evaluation Metrics)** of the document, which provides their detailed mathematical formulas and explanatory lists defining all necessary variables.
+
+**Conclusion:** The document provides a rich framework for evaluating retrieval systems using metrics like **Recall@k** and **mAP**, which are conceptually linked to the components (recall and precision) of the **F1-score**. However, the specific formula, definition as a harmonic mean, and detailed mathematical analysis of the **F1-score** itself cannot be derived from the provided multimodal content, which treats it solely as a downstream application metric for understanding tasks.
+
+### References
+
+- [1] multimodal_doc.pdf
+INFO: Successfully finalized 12 storages
+INFO: Successfully finalized all RAGAnything storages

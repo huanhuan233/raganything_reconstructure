@@ -1,0 +1,104 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+raga/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+site/
+*.tgz
+*.tar.gz
+*.whl
+vllm-0.8.5+cu118-cp38-abi3-manylinux1_x86_64.whl
+
+# Logs
+logs/
+*.log
+*.log.*
+*.logfire
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Cache / temp
+.cache/
+temp/
+.history/
+
+# Runtime data / outputs
+output/
+outputs/
+output*/
+runtime_storage/
+runtime_storage*/
+**/runtime_storage/
+**/runtime_storage*/
+*.jsonl
+!README*.jsonl
+rag_storage/
+rag_storage*/
+inputs/
+Inputs/
+examples/input/
+examples/output/
+checkpoints/
+weights/
+models/
+results/
+runs/
+wandb/
+tiktoken_cache/
+local_neo4jWorkDir/
+neo4jWorkDir/
+
+# Neo4j (Docker / local) — runtime DB and logs; can be hundreds of MB
+**/deploy/neo4j/data/
+**/deploy/neo4j/logs/
+
+# Large local bundle at repo root (optional; delete rule if you must version it)
+/RAG-Anything.zip
+
+# Common model artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+
+# Optional frontend artifacts (if added later)
+node_modules/
+.next/
+.nuxt/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+volumes/

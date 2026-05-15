@@ -1,0 +1,91 @@
+# Python-related files
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.tgz
+*.tar.gz
+*.ini
+
+# Virtual Environment
+.venv/
+env/
+venv/
+
+*.env*
+.env_example
+
+# Build / Distribution
+dist/
+build/
+site/
+
+# Logs / Reports
+*.log
+*.log.*
+*.logfire
+*.coverage/
+log/
+
+# Caches
+.cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.gradio/
+.history/
+temp/
+
+# IDE / Editor Files
+.idea/
+.vscode/
+.vscode/settings.json
+
+# Framework-specific files
+local_neo4jWorkDir/
+neo4jWorkDir/
+
+# Neo4j (Docker) — runtime volumes; do not commit
+deploy/neo4j/data/
+deploy/neo4j/logs/
+
+# Backend API — 本地保存的工作流 JSON（保留目录占位 .gitkeep）
+backend_api/storage/workflows/*.json
+
+# Backend API — 运行记录 JSON
+backend_api/storage/runs/*.json
+
+# Data & Storage
+inputs/
+Inputs/
+rag_storage*/
+examples/input/
+examples/output/
+output*/
+
+# Miscellaneous
+.DS_Store
+TODO.md
+ignore_this.txt
+*.ignore.*
+
+# Project-specific files
+dickens*/
+book.txt
+LightRAG.pdf
+LightRAG_2-4.pdf
+download_models_hf.py
+lightrag-dev/
+gui/
+tiktoken_cache/
+
+# unit-test files
+test_*
+
+# Cline files
+memory-bank/
+
+# AI
+.claude/
+.cursor/
+CLAUDE.md

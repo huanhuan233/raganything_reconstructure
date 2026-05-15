@@ -1,0 +1,216 @@
+{
+  "workflow_id": "default-knowledge-qa-full",
+  "name": "问答模板（全链路）",
+  "description": "workflow.start -> knowledge.select -> keyword.extract -> vector.retrieve -> retrieval.merge -> rerank -> context.build -> llm.generate -> workflow.end",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "workflow.start",
+      "config": {},
+      "position": {
+        "x": 84,
+        "y": 98
+      },
+      "label": "开始"
+    },
+    {
+      "id": "knowledge_select",
+      "type": "knowledge.select",
+      "config": {
+        "knowledge_id": "",
+        "collection_mode": "by_pipeline",
+        "vector_backend": "milvus",
+        "graph_backend": "neo4j",
+        "workspace": "ceshi02",
+        "collection": "newcollection05",
+        "pipeline_collections": {
+          "text_pipeline": "ceshi02",
+          "table_pipeline": "ceshi02",
+          "vision_pipeline": "ceshi02",
+          "equation_pipeline": "ceshi02",
+          "discard_pipeline": "ceshi02"
+        },
+        "text_collection": "ceshi02",
+        "table_collection": "ceshi02",
+        "vision_collection": "ceshi02",
+        "local_jsonl_paths": {},
+        "embedding_model": ""
+      },
+      "position": {
+        "x": 294,
+        "y": -112
+      },
+      "label": "选择知识库"
+    },
+    {
+      "id": "keyword_extract",
+      "type": "keyword.extract",
+      "config": {
+        "keyword_mode": "lightrag",
+        "max_keywords": 99,
+        "language": "auto",
+        "fallback_to_rule": false,
+        "query": null,
+        "model": "deepseek-ai/DeepSeek-V3.2"
+      },
+      "position": {
+        "x": 672,
+        "y": 14
+      },
+      "label": "关键词抽取"
+    },
+    {
+      "id": "vector_retrieve",
+      "type": "vector.retrieve",
+      "config": {
+        "top_k": 10
+      },
+      "position": {
+        "x": 966,
+        "y": 154
+      },
+      "label": "向量检索"
+    },
+    {
+      "id": "retrieval_merge",
+      "type": "retrieval.merge",
+      "config": {},
+      "position": {
+        "x": 1246,
+        "y": 98
+      },
+      "label": "检索合并"
+    },
+    {
+      "id": "rerank",
+      "type": "rerank",
+      "config": {
+        "rerank_engine": "lightrag",
+        "rerank_model": "Qwen/Qwen3-VL-Reranker-8B",
+        "top_k": 20,
+        "score_threshold": 0,
+        "graph_boost": 0.15,
+        "keyword_boost": 0.12,
+        "diversity_boost": 0.06,
+        "vector_weight": 1,
+        "graph_weight": 1.1,
+        "keyword_weight": 0.9,
+        "vision_weight": 1
+      },
+      "position": {
+        "x": 1596,
+        "y": -42
+      },
+      "label": "结果重排"
+    },
+    {
+      "id": "context_build",
+      "type": "context.build",
+      "config": {
+        "max_context_chars": 8000,
+        "max_results": 20,
+        "include_metadata": true,
+        "include_scores": true,
+        "context_format": "markdown",
+        "deduplicate_text": false
+      },
+      "position": {
+        "x": 1764,
+        "y": 98
+      },
+      "label": "上下文构建"
+    },
+    {
+      "id": "llm_generate",
+      "type": "llm.generate",
+      "config": {
+        "query": null,
+        "model": "deepseek-ai/DeepSeek-V3.2",
+        "system_prompt": "你是一个知识库问答助手，仔细思考后回答我的问题。",
+        "answer_style": "详细",
+        "include_references": true,
+        "max_tokens": 5000,
+        "temperature": 1
+      },
+      "position": {
+        "x": 2044,
+        "y": 98
+      },
+      "label": "LLM 生成"
+    },
+    {
+      "id": "end",
+      "type": "workflow.end",
+      "config": {},
+      "position": {
+        "x": 2324,
+        "y": 98
+      },
+      "label": "结束"
+    },
+    {
+      "id": "wf_0vrAQAZg",
+      "type": "graph.retrieve",
+      "config": {
+        "implementation_mode": "minimal",
+        "top_k": 20,
+        "graph_backend": "neo4j",
+        "workspace": "",
+        "query": "",
+        "high_level_keywords": [],
+        "low_level_keywords": []
+      },
+      "position": {
+        "x": 1162,
+        "y": -84
+      },
+      "label": "图谱检索"
+    }
+  ],
+  "edges": [
+    [
+      "start",
+      "knowledge_select"
+    ],
+    [
+      "knowledge_select",
+      "keyword_extract"
+    ],
+    [
+      "keyword_extract",
+      "vector_retrieve"
+    ],
+    [
+      "retrieval_merge",
+      "rerank"
+    ],
+    [
+      "rerank",
+      "context_build"
+    ],
+    [
+      "context_build",
+      "llm_generate"
+    ],
+    [
+      "llm_generate",
+      "end"
+    ],
+    [
+      "vector_retrieve",
+      "wf_0vrAQAZg"
+    ],
+    [
+      "wf_0vrAQAZg",
+      "retrieval_merge"
+    ]
+  ],
+  "entry_node_ids": [
+    "start"
+  ],
+  "input_data": {
+    "query": "形容一下这个图的内容"
+  },
+  "created_at": "2026-05-12T07:46:22Z",
+  "updated_at": "2026-05-15T08:23:44Z"
+}

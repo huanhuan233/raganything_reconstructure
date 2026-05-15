@@ -1,0 +1,316 @@
+{
+  "workflow_id": "default-entity-relation-extract-validation",
+  "name": "实体关系抽取验证模板",
+  "description": "workflow.start -> document.parse -> content.filter -> multimodal.process -> content.route -> chunk.split -> entity_relation.extract -> workflow.end",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "workflow.start",
+      "config": {},
+      "position": {
+        "x": -140,
+        "y": -126
+      },
+      "label": "开始"
+    },
+    {
+      "id": "document_parse",
+      "type": "document.parse",
+      "config": {
+        "parser": "mineru",
+        "parse_method": "auto",
+        "pages_per_split": 2,
+        "doc_id": null,
+        "mock_text": "模拟解析得到的正文片段。",
+        "source_path": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything\\RAG-Anything\\Inputs\\崔本城毕设.png"
+      },
+      "position": {
+        "x": 182,
+        "y": -126
+      },
+      "label": "文档解析"
+    },
+    {
+      "id": "content_filter",
+      "type": "content.filter",
+      "config": {
+        "drop_empty": false,
+        "keep_page_numbers": true,
+        "keep_types": [],
+        "drop_types": [],
+        "min_text_length": 0
+      },
+      "position": {
+        "x": 490,
+        "y": -98
+      },
+      "label": "内容过滤"
+    },
+    {
+      "id": "multimodal_process",
+      "type": "multimodal.process",
+      "config": {
+        "use_vlm": true,
+        "vlm_provider": null,
+        "vlm_model": "Qwen/Qwen3.6-35B-A3B",
+        "max_visual_items": 100,
+        "process_types": [
+          "chart",
+          "equation",
+          "figure",
+          "footer",
+          "formula",
+          "formula_caption",
+          "formula_label",
+          "image",
+          "image_caption",
+          "inline_formula",
+          "page_number",
+          "seal",
+          "sheet",
+          "table",
+          "table_caption",
+          "table_footnote",
+          "footnote",
+          "margin_note",
+          "header",
+          "title",
+          "subtitle",
+          "reference",
+          "list",
+          "text",
+          "caption",
+          "code",
+          "algorithm",
+          "discarded",
+          "layout_region",
+          "multi_column_region"
+        ],
+        "vlm_prompt": "你现在需要分析一张标准机械工程图纸。  注意：  这不是普通图片，而是符合机械制图规范的工程图。  请严格按照机械制图规则理解图中内容，不要把不同视图当成不同零件。  分析时重点关注：  1. 主视图、剖视图、局部剖面之间的对应关系 2. 轴类零件的阶梯结构 3. 配合尺寸、公差与形位公差 4. 表面粗糙度符号 5. 螺纹标注 6. 基准符号（如A基准） 7. 剖面 A-A、B-B 对应主视图中的具体位置 8. 非圆特征（铣平面、对边、键槽等） 9. 尺寸链与加工工艺逻辑 10. 技术要求中的材料与热处理信息  不要只做OCR识别。  请理解：  - 零件结构 - 机械加工意图 - 各视图之间的空间关系 - 哪些是关键配合面 - 哪些尺寸属于加工关键尺寸 - 哪些标注属于形位公差控制  输出时：  优先描述结构关系与工程语义， 而不是简单逐行读取文字。"
+      },
+      "position": {
+        "x": 840,
+        "y": -98
+      },
+      "label": "多模态预处理"
+    },
+    {
+      "id": "content_route",
+      "type": "content.route",
+      "config": {
+        "keep_unrouted": true,
+        "drop_discard_types": true
+      },
+      "position": {
+        "x": 1120,
+        "y": -98
+      },
+      "label": "内容路由"
+    },
+    {
+      "id": "chunk_split",
+      "type": "chunk.split",
+      "config": {
+        "chunk_token_size": 1200,
+        "chunk_overlap_token_size": 100,
+        "include_multimodal_descriptions": true,
+        "skip_pipelines": [
+          "discard_pipeline"
+        ]
+      },
+      "position": {
+        "x": 1400,
+        "y": -112
+      },
+      "label": "文本切片"
+    },
+    {
+      "id": "entity_relation_extract",
+      "type": "entity_relation.extract",
+      "config": {
+        "model": "deepseek-ai/DeepSeek-V3.2",
+        "entity_extract_max_gleaning": 1,
+        "language": "auto",
+        "include_multimodal_chunks": true,
+        "max_chunks": 50,
+        "use_llm_cache": false
+      },
+      "position": {
+        "x": 1834,
+        "y": 168
+      },
+      "label": "实体关系抽取"
+    },
+    {
+      "id": "wf_RHWtdYzy",
+      "type": "entity.merge",
+      "config": {
+        "merge_engine": "lightrag",
+        "merge_strategy": "normalize",
+        "similarity_threshold": 0.9,
+        "enable_alias_merge": true,
+        "enable_fuzzy_merge": true,
+        "enable_embedding_merge": false,
+        "use_llm_summary_on_merge": true,
+        "model": "deepseek-ai/DeepSeek-V3.2"
+      },
+      "position": {
+        "x": 2198,
+        "y": 252
+      },
+      "label": "实体归并"
+    },
+    {
+      "id": "wf_b_OBvvsh",
+      "type": "relation.merge",
+      "config": {
+        "merge_engine": "lightrag",
+        "merge_strategy": "canonical",
+        "similarity_threshold": 0.9,
+        "enable_relation_type_merge": true,
+        "enable_description_merge": true,
+        "use_llm_summary_on_merge": true,
+        "model": "deepseek-ai/DeepSeek-V3.2"
+      },
+      "position": {
+        "x": 2198,
+        "y": -14
+      },
+      "label": "关系归并"
+    },
+    {
+      "id": "wf_nL0hvNS-",
+      "type": "graph.merge",
+      "config": {
+        "merge_engine": "lightrag",
+        "merge_strategy": "connected_components",
+        "remove_isolated_entities": false,
+        "aggregate_chunk_refs": true,
+        "aggregate_descriptions": true
+      },
+      "position": {
+        "x": 2618,
+        "y": 70
+      },
+      "label": "图级归并"
+    },
+    {
+      "id": "wf_SWyr3F6H",
+      "type": "graph.persist",
+      "config": {
+        "graph_backend": "neo4j",
+        "create_if_missing": true,
+        "persist_components": true,
+        "workspace": "test14"
+      },
+      "position": {
+        "x": 3108,
+        "y": 280
+      },
+      "label": "图谱持久化"
+    },
+    {
+      "id": "wf_jRhay8Nr",
+      "type": "storage.persist",
+      "config": {
+        "vector_storage": {
+          "backend": "milvus",
+          "mode": "create",
+          "collection": "newcollection14",
+          "dimension": 4096,
+          "metric_type": "COSINE",
+          "index_type": "IVF_FLAT",
+          "auto_create_index": true,
+          "create_if_missing": true
+        }
+      },
+      "position": {
+        "x": 3514,
+        "y": 154
+      },
+      "label": "存储落盘"
+    },
+    {
+      "id": "wf_9cMnRyDX",
+      "type": "workflow.end",
+      "config": {},
+      "position": {
+        "x": 3696,
+        "y": 42
+      },
+      "label": "结束"
+    },
+    {
+      "id": "wf_2Q5MoQuI",
+      "type": "embedding.index",
+      "config": {},
+      "position": {
+        "x": 1512,
+        "y": 98
+      },
+      "label": "分类向量化"
+    }
+  ],
+  "edges": [
+    [
+      "start",
+      "document_parse"
+    ],
+    [
+      "document_parse",
+      "content_filter"
+    ],
+    [
+      "content_filter",
+      "multimodal_process"
+    ],
+    [
+      "multimodal_process",
+      "content_route"
+    ],
+    [
+      "entity_relation_extract",
+      "wf_RHWtdYzy"
+    ],
+    [
+      "wf_RHWtdYzy",
+      "wf_b_OBvvsh"
+    ],
+    [
+      "wf_b_OBvvsh",
+      "wf_nL0hvNS-"
+    ],
+    [
+      "wf_nL0hvNS-",
+      "wf_SWyr3F6H"
+    ],
+    [
+      "wf_SWyr3F6H",
+      "wf_jRhay8Nr"
+    ],
+    [
+      "wf_jRhay8Nr",
+      "wf_9cMnRyDX"
+    ],
+    [
+      "content_route",
+      "chunk_split"
+    ],
+    [
+      "chunk_split",
+      "wf_2Q5MoQuI"
+    ],
+    [
+      "wf_2Q5MoQuI",
+      "entity_relation_extract"
+    ]
+  ],
+  "entry_node_ids": [
+    "start"
+  ],
+  "input_data": {
+    "source_path": "Inputs/3.pdf"
+  },
+  "created_at": "2026-05-13T01:44:34Z",
+  "updated_at": "2026-05-14T03:21:46Z"
+}

@@ -1,0 +1,25 @@
+{
+  "workflow_id": "mock_api_demo",
+  "nodes": [
+    {
+      "id": "prep",
+      "type": "multimodal.process",
+      "config": {}
+    },
+    {
+      "id": "reply",
+      "type": "llm.generate",
+      "config": {
+        "mock_answer": "来自后端 API mock 链路的成功响应。"
+      }
+    }
+  ],
+  "edges": [
+    ["prep", "reply"]
+  ],
+  "entry_node_ids": ["prep"],
+  "input_data": {
+    "query": "这是一条测试请求",
+    "seed": true
+  }
+}
