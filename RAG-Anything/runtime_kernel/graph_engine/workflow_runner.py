@@ -15,9 +15,7 @@ from runtime_kernel.graph.workflow_schema import WorkflowSchema
 class WorkflowRunner:
     """
     按有向无环图拓扑序依次执行节点；任一步失败则中止并返回聚合错误信息。
-
-    多条入边时，将各父节点 ``NodeResult.data`` 合并为
-    ``{"<parent_id>": data}`` 传入子节点（若父节点唯一且 data 为 dict，亦可被下游直接解构）。
+    WorkflowRunner 不再直接负责业务数据传递，统一通过 ``ExecutionContext`` 状态池驱动。
     """
 
     def __init__(self, registry: Optional[NodeRegistry] = None) -> None:
@@ -66,7 +64,7 @@ class WorkflowRunner:
         self,
         node_id: str,
         schema: WorkflowSchema,
-        results_by_id: Dict[str, NodeResult],
+        context: ExecutionContext,
         initial_input: Any,
     ) -> Any:
         parents = self._parents(schema, node_id)
@@ -76,11 +74,10 @@ class WorkflowRunner:
             return initial_input
         if len(parents) == 1:
             pid = parents[0]
-            prev = results_by_id[pid]
-            return prev.data
+            return context.get_node_output_data(pid)
         merged: Dict[str, Any] = {}
         for pid in sorted(parents):
-            merged[pid] = results_by_id[pid].data
+            merged[pid] = context.get_node_output_data(pid)
         return merged
 
     async def run(
@@ -105,15 +102,23 @@ class WorkflowRunner:
 
         order = self._topological_order(schema)
         results_by_id: Dict[str, NodeResult] = {}
+        context.runtime_state.mark_running()
+        context.graph_state.init_dependencies(order, schema.edges)
+        context.execution_metadata["workflow_id"] = schema.workflow_id
+        context.execution_metadata["topological_order"] = list(order)
+        context.emit_event("workflow_started", {"topological_order": list(order)})
         context.log(f"workflow {schema.workflow_id} 拓扑序: {order}")
 
         for nid in order:
             spec = node_by_id[nid]
             ntype = str(spec["type"])
             cfg = dict(spec.get("config") or {})
+            node_state = context.register_node_state(nid, ntype)
             try:
                 node: BaseNode = self._registry.create_node(ntype, nid, cfg)
             except KeyError:
+                node_state.mark_failed(f"未注册的节点类型: {ntype}")
+                context.runtime_state.mark_failed(f"未注册的节点类型: {ntype}")
                 if node_error_callback is not None:
                     try:
                         maybe = node_error_callback(nid, ntype, f"未注册的节点类型: {ntype}", dict(results_by_id))
@@ -128,7 +133,12 @@ class WorkflowRunner:
                     "node_results": results_by_id,
                 }
 
-            inp = self._build_input(nid, schema, results_by_id, initial_input)
+            inp = self._build_input(nid, schema, context, initial_input)
+            node_state.mark_running()
+            context.emit_event(
+                "node_started",
+                {"node_id": nid, "node_type": ntype, "input_ready": True},
+            )
             context.log(f"执行节点 {nid} ({ntype})")
             if node_start_callback is not None:
                 try:
@@ -138,9 +148,15 @@ class WorkflowRunner:
                 except Exception:  # noqa: BLE001
                     pass
             try:
-                result = await node.run(inp, context)
+                result = await node.execute(context, inp)
             except Exception as exc:  # noqa: BLE001 — 骨架捕获便于返回
                 err = str(exc)
+                node_state.mark_failed(err)
+                context.runtime_state.mark_failed(err)
+                context.emit_event(
+                    "node_failed",
+                    {"node_id": nid, "node_type": ntype, "error": err},
+                )
                 context.log(f"节点 {nid} 异常: {err}")
                 if node_error_callback is not None:
                     try:
@@ -166,6 +182,12 @@ class WorkflowRunner:
                     # 进度回调异常不应影响主执行流程。
                     pass
             if not result.success:
+                node_state.mark_failed(result.error or "节点失败")
+                context.runtime_state.mark_failed(result.error or "节点失败")
+                context.emit_event(
+                    "node_failed",
+                    {"node_id": nid, "node_type": ntype, "error": result.error or "节点失败"},
+                )
                 context.log(f"节点 {nid} 返回 success=False: {result.error}")
                 return {
                     "success": False,
@@ -173,5 +195,12 @@ class WorkflowRunner:
                     "failed_node_id": nid,
                     "node_results": results_by_id,
                 }
+            node_state.mark_success()
+            context.emit_event(
+                "node_finished",
+                {"node_id": nid, "node_type": ntype, "success": True},
+            )
 
+        context.runtime_state.mark_success()
+        context.emit_event("workflow_finished", {"success": True})
         return {"success": True, "node_results": results_by_id, "error": None}
