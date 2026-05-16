@@ -3,6 +3,7 @@ import { addEdge } from '@vue-flow/core';
 import { ref, type Ref } from 'vue';
 import { nanoid } from '@sa/utils';
 import { fetchRagNodeTypes } from '@/service/api';
+import { isrSemanticFieldsFromMeta } from '@/components/runtime/isrPalette';
 import type { RagFlowNodeData, RagNodeImplementationStatus, RagNodeMetadata } from '@/types/ragWorkflow';
 import type { RagWfEdgeInsertPayload } from '../injectionKeys';
 
@@ -80,7 +81,8 @@ export function useWorkflowNodes(options: {
       nodeType: meta.node_type,
       config: {},
       isPlaceholder: Boolean(meta.is_placeholder),
-      implementationStatus: resolveImplementationStatus(meta)
+      implementationStatus: resolveImplementationStatus(meta),
+      ...isrSemanticFieldsFromMeta(meta)
     };
 
     const vfNode: Node = {
@@ -121,7 +123,8 @@ export function useWorkflowNodes(options: {
       nodeType: meta.node_type,
       config: {},
       isPlaceholder: Boolean(meta.is_placeholder),
-      implementationStatus: resolveImplementationStatus(meta)
+      implementationStatus: resolveImplementationStatus(meta),
+      ...isrSemanticFieldsFromMeta(meta)
     };
 
     const position = {
@@ -183,7 +186,8 @@ export function useWorkflowNodes(options: {
       nodeType: meta.node_type,
       config: {},
       isPlaceholder: Boolean(meta.is_placeholder),
-      implementationStatus: resolveImplementationStatus(meta)
+      implementationStatus: resolveImplementationStatus(meta),
+      ...isrSemanticFieldsFromMeta(meta)
     };
 
     const position = {

@@ -9,6 +9,8 @@ from runtime_kernel.node_runtime.base_node import BaseNode
 from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.content_access import ContentAccess
+from runtime_kernel.runtime_state.variable_access import VariableAccess
 
 
 class GraphRetrieveNode(BaseNode):
@@ -124,11 +126,13 @@ class GraphRetrieveNode(BaseNode):
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
         payload = dict(input_data) if isinstance(input_data, dict) else {}
+        query_from_pool = VariableAccess.get_query(context, default="")
+        top_k_from_pool = VariableAccess.get_top_k(context, default=20)
         query = str(
             self.config.get("query")
+            or query_from_pool
             or payload.get("query")
             or payload.get("query_text")
-            or context.shared_data.get("query")
             or ""
         ).strip()
         if not query:
@@ -141,7 +145,10 @@ class GraphRetrieveNode(BaseNode):
         high = cfg_high or in_high
         low = cfg_low or in_low
 
-        selected = self._as_dict(payload.get("selected_knowledge"))
+        selected = self._as_dict(
+            context.variable_pool.get("selected_knowledge")
+            or payload.get("selected_knowledge")
+        )
         selected_backend = str(selected.get("graph_backend") or "").strip().lower()
         selected_ws = str(selected.get("graph_workspace") or selected.get("workspace") or "").strip()
         cfg_backend = str(self.config.get("graph_backend") or "auto").strip().lower() or "auto"
@@ -150,7 +157,7 @@ class GraphRetrieveNode(BaseNode):
             backend = "neo4j"
         workspace = str(self.config.get("workspace") or selected_ws or "").strip()
         impl_mode = str(self.config.get("implementation_mode") or "minimal").strip().lower()
-        top_k = max(1, int(self.config.get("top_k") or 20))
+        top_k = max(1, int(self.config.get("top_k") or top_k_from_pool or 20))
         strict_mode = self._as_bool(self.config.get("strict_mode"), default=False)
 
         adapter = context.adapters.get("lightrag_graph_retrieve")
@@ -198,6 +205,7 @@ class GraphRetrieveNode(BaseNode):
             }
             out_data["graph_results"] = graph_results[:top_k]
             out_data["graph_summary"] = graph_summary
+            ContentAccess.set_retrieval_results(context, self.node_id, out_data["graph_results"])
             context.log(
                 f"[GraphRetrieveNode] mode={impl_mode} backend={backend} workspace={workspace or '-'} "
                 f"high={len(high)} low={len(low)} total={graph_summary['total']}"

@@ -1,0 +1,425 @@
+{
+	"sparqlConn": {
+		"name": "PrefabNodeGroups_OVERRIDDEN",
+		"domain": "http://OVERRIDDEN",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://overridden:4240",
+				"dataset": "http://research.ge.com/knowledge/prefab/model/OVERRIDDEN"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://overridden:2420",
+				"dataset": "http://research.ge.com/knowledge/prefab/data/OVERRIDDEN"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 5,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "connectionAlias",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#connectionAlias",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?connectionAlias",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "domain",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#domain",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?domain",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "dsDataset",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#dsDataset",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?dsDataset",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "dsKsURL",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#dsKsURL",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?dsKsURL",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "dsURL",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#dsURL",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?dsURL",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "originalServerType",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#originalServerType",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?originalServerType",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "SemTkConnection",
+				"fullURIName": "http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection",
+				"subClassNames": [],
+				"SparqlID": "?SemTkConnection",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "ID",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#ID",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?ID",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "NodeGroup",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#NodeGroup",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?NodeGroup",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "comments",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#comments",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?comments",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "creationDate",
+						"ValueType": "date",
+						"relationship": "http://www.w3.org/2001/XMLSchema#date",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#creationDate",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "creator",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#creator",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?SemTkConnection"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "originalConnection",
+						"ValueType": "SemTkConnection",
+						"UriValueType": "http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection",
+						"ConnectBy": "originalConnection",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/prefabNodeGroup#originalConnection"
+					}
+				],
+				"NodeName": "PrefabNodeGroup",
+				"fullURIName": "http://research.ge.com/semtk/prefabNodeGroup#PrefabNodeGroup",
+				"subClassNames": [],
+				"SparqlID": "?PrefabNodeGroup",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "comments"
+			},
+			{
+				"colId": "col_1",
+				"colName": "connectionAlias"
+			},
+			{
+				"colId": "col_2",
+				"colName": "creationDate"
+			},
+			{
+				"colId": "col_3",
+				"colName": "creator"
+			},
+			{
+				"colId": "col_4",
+				"colName": "domain"
+			},
+			{
+				"colId": "col_5",
+				"colName": "dsDataset"
+			},
+			{
+				"colId": "col_6",
+				"colName": "dsKsURL"
+			},
+			{
+				"colId": "col_7",
+				"colName": "dsURL"
+			},
+			{
+				"colId": "col_8",
+				"colName": "id"
+			},
+			{
+				"colId": "col_9",
+				"colName": "nodegroup"
+			},
+			{
+				"colId": "col_10",
+				"colName": "originalServerType"
+			}
+		],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "semtk_conn_"
+			}
+		],
+		"transforms": [
+			{
+				"transId": "trans_0",
+				"name": "hash",
+				"transType": "hashCode",
+				"arg1": "",
+				"arg2": ""
+			}
+		],
+		"nodes": [
+			{
+				"sparqlID": "?PrefabNodeGroup",
+				"type": "http://research.ge.com/semtk/prefabNodeGroup#PrefabNodeGroup",
+				"mapping": [
+					{
+						"colId": "col_8",
+						"colName": "id",
+						"transformList": [
+							"trans_0"
+						]
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#ID",
+						"mapping": [
+							{
+								"colId": "col_8",
+								"colName": "id"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#NodeGroup",
+						"mapping": [
+							{
+								"colId": "col_9",
+								"colName": "nodegroup"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#comments",
+						"mapping": [
+							{
+								"colId": "col_0",
+								"colName": "comments"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#creationDate",
+						"mapping": [
+							{
+								"colId": "col_2",
+								"colName": "creationDate"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#creator",
+						"mapping": [
+							{
+								"colId": "col_3",
+								"colName": "creator"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?SemTkConnection",
+				"type": "http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection",
+				"mapping": [
+					{
+						"textId": "text_0",
+						"text": "semtk_conn_"
+					},
+					{
+						"colId": "col_1",
+						"colName": "connectionAlias",
+						"transformList": [
+							"trans_0"
+						]
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#connectionAlias",
+						"mapping": [
+							{
+								"colId": "col_1",
+								"colName": "connectionAlias"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#domain",
+						"mapping": [
+							{
+								"colId": "col_4",
+								"colName": "domain"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#dsDataset",
+						"mapping": [
+							{
+								"colId": "col_5",
+								"colName": "dsDataset"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#dsKsURL",
+						"mapping": [
+							{
+								"colId": "col_6",
+								"colName": "dsKsURL"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#dsURL",
+						"mapping": [
+							{
+								"colId": "col_7",
+								"colName": "dsURL"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#originalServerType",
+						"mapping": [
+							{
+								"colId": "col_10",
+								"colName": "originalServerType"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

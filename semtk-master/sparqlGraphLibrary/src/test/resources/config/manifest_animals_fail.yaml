@@ -1,0 +1,20 @@
+# name property is missing, expect error
+
+copy-to-graph: 'uri://DefaultGraph'
+perform-entity-resolution: 'uri://DefaultGraph'
+
+fooootprint: # there is a typo here, expect error
+  model-graphs:
+    - http://junit/animals/model
+  data-graphs:
+    - http://junit/animals/data
+    - http://junit/animals/data2
+
+steps:
+  - manifestttt: animals.yaml
+
+  - nodegroups: animals/nodegroups
+
+  - data: animals/mammals/import.yaml
+  - data: animals/reptiles/import.yaml
+  - data: animals/amphibians/import.yaml

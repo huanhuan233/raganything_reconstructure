@@ -84,9 +84,7 @@ def ensure_neo4j_graph_partition(
     auto_create_constraints: bool = True,
 ) -> tuple[bool, str | None]:
     """
-    在同一 Neo4j database 内声明「图分区」：不写 CREATE DATABASE，仅校验连接并可选建索引/约束。
-
-    persist 写入时会在 RuntimeRecord 上带 graph_partition，MERGE 键为 (record_id, graph_partition)。
+    在同一 Neo4j database 内声明「图分区」：不写 CREATE DATABASE，可选建索引/约束，并 MERGE 轻量 ``_GraphPartitionBookmark`` 节点（带 graph_partition / namespace）供自动发现接口枚举。
     """
     dbn = (database or "").strip()
     part = (partition or "").strip()
@@ -119,6 +117,17 @@ def ensure_neo4j_graph_partition(
                     session.run(cy_uniq)
             except Exception:  # noqa: BLE001
                 pass
+        # 写仅占位书签，便于 /knowledge/discover 枚举分区（仅靠建索引不会让下拉有数据）。
+        bookmark = (
+            "MERGE (m:_GraphPartitionBookmark {bookmark_id: $part}) "
+            "SET m.graph_partition = $part, m.namespace = $part, "
+            "m.updated_at = datetime()"
+        )
+        try:
+            with drv.session(database=dbn) as session:
+                session.run(bookmark, part=part)
+        except Exception:
+            pass
         return True, None
     except Exception as exc:  # noqa: BLE001
         return False, str(exc)

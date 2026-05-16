@@ -1,0 +1,28 @@
+name: 'Animals'
+description: 'Load information about animals'
+
+copy-to-graph: 'uri://DefaultGraph'
+perform-entity-resolution: 'uri://DefaultGraph'
+
+footprint:
+  model-graphs:
+    - http://junit/animals/model
+  data-graphs:
+    - http://junit/animals/data1
+    - http://junit/animals/data2
+  nodegroups:
+    - animals/nodegroups
+
+steps:
+  - model: animals/import.yaml
+  - manifest: animals.yaml
+
+  - nodegroups: animals/nodegroups
+
+  - data: animals/mammals/import.yaml
+  - data: animals/reptiles/import.yaml
+  - data: animals/amphibians/import.yaml
+
+  - copygraph:
+      from-graph: http://junit/animals/domestic
+      to-graph: http://junit/animals/wild

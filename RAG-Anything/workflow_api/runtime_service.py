@@ -31,6 +31,57 @@ def get_available_nodes() -> List[Dict[str, Any]]:
     return get_default_registry().list_nodes()
 
 
+def _key_suggests_vector_field(key: str | None) -> bool:
+    if not key:
+        return False
+    lk = str(key).lower()
+    return "vector" in lk or "embedding" in lk
+
+
+def _is_uniform_number_list(value: list[Any]) -> bool:
+    if not value:
+        return False
+    for x in value:
+        if isinstance(x, bool) or not isinstance(x, (int, float)):
+            return False
+    return True
+
+
+def _omit_vector_floats_placeholder(dim: int) -> dict[str, Any]:
+    return {"_omitted": "vector_floats", "dim": int(dim)}
+
+
+def strip_vector_floats_for_storage(value: Any, *, key: str | None = None) -> Any:
+    """
+    去掉大块浮点向量，缩小运行记录 / HTTP 响应体积，避免 UI 渲染巨量数字。
+
+    规则：字段名含 vector/embedding 的数值列表一律省略；其它无名列表仅当长度 >= 192
+    且元素全为数字时视为向量省略（常见 embedding 维度均 >= 192）。
+    """
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    if isinstance(value, float):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, dict):
+        try:
+            return {str(k): strip_vector_floats_for_storage(v, key=str(k)) for k, v in value.items()}
+        except Exception:  # noqa: BLE001
+            return str(value)
+    if isinstance(value, list):
+        if _is_uniform_number_list(value):
+            dim = len(value)
+            if _key_suggests_vector_field(key) or dim >= 192:
+                return _omit_vector_floats_placeholder(dim)
+            return value
+        try:
+            return [strip_vector_floats_for_storage(x, key=None) for x in value]
+        except Exception:  # noqa: BLE001
+            return str(value)
+    return str(value)
+
+
 def _serialize_node_results(
     raw: Dict[str, NodeResult],
 ) -> Dict[str, SerializedNodeResult]:
@@ -53,11 +104,12 @@ def _serialize_node_results(
     out: Dict[str, SerializedNodeResult] = {}
     for nid, nr in raw.items():
         meta = dict(nr.metadata or {})
+        data_stripped = strip_vector_floats_for_storage(nr.data)
         out[nid] = SerializedNodeResult(
             success=nr.success,
-            data=_sanitize(nr.data),
+            data=_sanitize(data_stripped),
             error=nr.error,
-            metadata=_sanitize(meta) if isinstance(meta, dict) else {},
+            metadata=_sanitize(strip_vector_floats_for_storage(meta)) if isinstance(meta, dict) else {},
         )
     return out
 
@@ -78,6 +130,7 @@ def _utc_iso() -> str:
 
 
 def _preview(value: Any, *, max_chars: int = 1600) -> Any:
+    value = strip_vector_floats_for_storage(value)
     if value is None or isinstance(value, (bool, int, float)):
         return value
     if isinstance(value, str):

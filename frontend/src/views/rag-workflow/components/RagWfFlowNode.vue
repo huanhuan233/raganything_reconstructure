@@ -3,6 +3,7 @@ import { Icon } from '@iconify/vue';
 import { computed } from 'vue';
 import { Handle, Position } from '@vue-flow/core';
 import type { RagFlowNodeData, RagNodeImplementationStatus } from '@/types/ragWorkflow';
+import { resolveIsrVisualDomain } from '@/components/runtime/isrPalette';
 import { requestDeleteWorkflowNode } from '../workflowNodeDeleteBus';
 import { requestWorkflowPalette } from '../workflowPaletteBus';
 import { summarizeNodeConfig } from '../utils/nodeConfigSummary';
@@ -13,6 +14,28 @@ const props = defineProps<{
 }>();
 
 const summaryLine = computed(() => summarizeNodeConfig(props.data));
+const isrDomain = computed(() => resolveIsrVisualDomain(String(props.data.nodeType || '')));
+
+const isrCardClasses = computed(() =>
+  isrDomain.value ? ['rag-wf-node-card--isr', `rag-wf-node-card--isr-${isrDomain.value}`] : []
+);
+
+const semanticMetaBlocks = computed(() => {
+  const d = props.data;
+  const blocks: Array<{ label: string; items: string[] }> = [];
+  const si = Array.isArray(d.semanticInputs) ? d.semanticInputs : [];
+  const so = Array.isArray(d.semanticOutputs) ? d.semanticOutputs : [];
+  const cd = Array.isArray(d.constraintDependencies) ? d.constraintDependencies : [];
+  const rd = Array.isArray(d.runtimeStateDependencies) ? d.runtimeStateDependencies : [];
+  const ot = Array.isArray(d.ontologyTypes) ? d.ontologyTypes : [];
+  if (si.length) blocks.push({ label: '语义入', items: si });
+  if (so.length) blocks.push({ label: '语义出', items: so });
+  if (cd.length) blocks.push({ label: '约束依赖', items: cd });
+  if (rd.length) blocks.push({ label: '状态依赖', items: rd });
+  if (ot.length) blocks.push({ label: '本体类型', items: ot });
+  return blocks;
+});
+
 const implStatus = computed<RagNodeImplementationStatus>(() => {
   return props.data.implementationStatus ?? (props.data.isPlaceholder ? 'placeholder' : 'real');
 });
@@ -46,7 +69,16 @@ function onDeleteClick(e: MouseEvent) {
 </script>
 
 <template>
-  <div class="rag-wf-node-card" :class="{ 'is-workflow-start': isWorkflowStart, 'is-workflow-end': isWorkflowEnd }">
+  <div
+    class="rag-wf-node-card"
+    :class="[
+      {
+        'is-workflow-start': isWorkflowStart,
+        'is-workflow-end': isWorkflowEnd
+      },
+      ...isrCardClasses
+    ]"
+  >
     <Handle id="rag-in" class="rag-wf-node-handle rag-wf-node-handle-target" type="target" :position="Position.Left" />
     <button
       type="button"
@@ -61,6 +93,17 @@ function onDeleteClick(e: MouseEvent) {
       <div class="rag-wf-node-title">{{ data.label || data.nodeType }}</div>
       <div class="rag-wf-node-type" :title="data.nodeType">{{ data.nodeType }}</div>
       <div v-if="summaryLine" class="rag-wf-node-sum" :title="summaryLine">{{ summaryLine }}</div>
+      <div v-if="semanticMetaBlocks.length" class="rag-wf-node-sem">
+        <template v-for="block in semanticMetaBlocks" :key="block.label">
+          <div class="rag-wf-node-sem-head">{{ block.label }}</div>
+          <div class="rag-wf-node-sem-tags">
+            <span v-for="(tag, ix) in block.items.slice(0, 8)" :key="`${block.label}-${ix}`" class="rag-wf-node-sem-tag">{{
+              tag
+            }}</span>
+            <span v-if="block.items.length > 8" class="rag-wf-node-sem-more">+{{ block.items.length - 8 }}</span>
+          </div>
+        </template>
+      </div>
       <div class="rag-wf-node-footer">
         <span v-if="implStatus === 'placeholder'" class="rag-wf-node-badge rag-wf-node-badge--placeholder">占位</span>
         <span v-else-if="implStatus === 'partial'" class="rag-wf-node-badge rag-wf-node-badge--partial">半实现</span>
@@ -201,6 +244,82 @@ function onDeleteClick(e: MouseEvent) {
   overflow: hidden;
   word-break: break-word;
   flex: 1;
+}
+
+.rag-wf-node-sem {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 10px;
+}
+
+.rag-wf-node-sem-head {
+  margin: 6px 0 2px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.03em;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.rag-wf-node-sem-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.rag-wf-node-sem-tag {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+}
+
+.rag-wf-node-sem-more {
+  color: #94a3b8;
+  align-self: center;
+}
+
+.rag-wf-node-card--isr {
+  border-width: 1.5px;
+}
+
+.rag-wf-node-card--isr-ontology {
+  border-color: #1e3a8a;
+  background: linear-gradient(165deg, rgb(30 58 138 / 5%), #fff);
+}
+
+.rag-wf-node-card--isr-constraint {
+  border-color: #b91c1c;
+  background: linear-gradient(165deg, rgb(185 28 28 / 5%), #fff);
+}
+
+.rag-wf-node-card--isr-semantic {
+  border-color: #7c3aed;
+  background: linear-gradient(165deg, rgb(124 58 237 / 5%), #fff);
+}
+
+.rag-wf-node-card--isr-state {
+  border-color: #ea580c;
+  background: linear-gradient(165deg, rgb(234 88 12 / 5%), #fff);
+}
+
+.rag-wf-node-card--isr-graph {
+  border-color: #0e7490;
+  background: linear-gradient(165deg, rgb(14 116 144 / 5%), #fff);
+}
+
+.rag-wf-node-card--isr-runtime {
+  border-color: #334155;
+  background: linear-gradient(165deg, rgb(51 65 85 / 6%), #fff);
 }
 
 .rag-wf-node-footer {

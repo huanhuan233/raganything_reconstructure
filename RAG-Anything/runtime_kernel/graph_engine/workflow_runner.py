@@ -10,6 +10,7 @@ from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.node_runtime.node_registry import NodeRegistry, get_default_registry
 from runtime_kernel.entities.node_result import NodeResult
 from runtime_kernel.graph.workflow_schema import WorkflowSchema
+from runtime_kernel.runtime_state.legacy_bridge import build_legacy_inputs_from_schema
 
 
 class WorkflowRunner:
@@ -57,29 +58,6 @@ class WorkflowRunner:
 
         return order
 
-    def _parents(self, schema: WorkflowSchema, node_id: str) -> List[str]:
-        return [a for a, b in schema.edges if b == node_id]
-
-    def _build_input(
-        self,
-        node_id: str,
-        schema: WorkflowSchema,
-        context: ExecutionContext,
-        initial_input: Any,
-    ) -> Any:
-        parents = self._parents(schema, node_id)
-        if not parents:
-            if isinstance(initial_input, dict) and node_id in initial_input:
-                return initial_input[node_id]
-            return initial_input
-        if len(parents) == 1:
-            pid = parents[0]
-            return context.get_node_output_data(pid)
-        merged: Dict[str, Any] = {}
-        for pid in sorted(parents):
-            merged[pid] = context.get_node_output_data(pid)
-        return merged
-
     async def run(
         self,
         schema: WorkflowSchema,
@@ -106,6 +84,7 @@ class WorkflowRunner:
         context.graph_state.init_dependencies(order, schema.edges)
         context.execution_metadata["workflow_id"] = schema.workflow_id
         context.execution_metadata["topological_order"] = list(order)
+        context.execution_metadata["default_legacy_input"] = initial_input
         context.emit_event("workflow_started", {"topological_order": list(order)})
         context.log(f"workflow {schema.workflow_id} 拓扑序: {order}")
 
@@ -133,7 +112,13 @@ class WorkflowRunner:
                     "node_results": results_by_id,
                 }
 
-            inp = self._build_input(nid, schema, context, initial_input)
+            legacy_inputs = build_legacy_inputs_from_schema(
+                schema=schema,
+                context=context,
+                initial_input=initial_input,
+            )
+            context.execution_metadata["legacy_node_inputs"] = legacy_inputs
+            inp = legacy_inputs.get(nid)
             node_state.mark_running()
             context.emit_event(
                 "node_started",
@@ -148,7 +133,7 @@ class WorkflowRunner:
                 except Exception:  # noqa: BLE001
                     pass
             try:
-                result = await node.execute(context, inp)
+                result = await node.execute(context)
             except Exception as exc:  # noqa: BLE001 — 骨架捕获便于返回
                 err = str(exc)
                 node_state.mark_failed(err)

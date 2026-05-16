@@ -1,0 +1,43 @@
+{
+	"groups": [
+		{
+			"name": "JobAdmin",
+			"members": ["testuser_job_admin"]
+		},
+		{
+			"name": "securityTestRead",
+			"members": ["testuser_read_only", "testuser_read_write"]
+		},
+		{
+			"name": "securityTestWrite",
+			"members": ["testuser_read_write"]
+		}
+	],
+	"graphs" [
+		{
+			"name": "http://securityTest",
+			"readGroups": ["securityTestRead"],
+			"writeGroups": ["securityTestWrite"]
+		},
+		{
+			"name": "http://job/admin/read",
+			"readGroups": ["JobAdmin"],
+			"writeGroups": []
+		},
+		{
+			"name": "http://job/admin/write",
+			"readGroups": [],
+			"writeGroups": ["JobAdmin"]
+		},
+		{
+			"name": "http://all/read",
+			"readGroups": ["ALL_USERS"],
+			"writeGroups": []
+		},
+		{
+			"name": "DEFAULT",
+			"readGroups": ["ALL_USERS"],
+			"writeGroups": ["JobAdmin"]
+		}
+	]
+}

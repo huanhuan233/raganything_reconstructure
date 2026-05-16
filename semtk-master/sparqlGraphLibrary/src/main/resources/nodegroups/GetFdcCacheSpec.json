@@ -1,0 +1,259 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Semtk services laptop",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://research.ge.com/semtk/services"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://research.ge.com/semtk/services"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 19,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#ingestNodeGroupId",
+						"Constraints": "",
+						"SparqlID": "?ingestNodeGroupId",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"functions": [
+							"GROUP_CONCAT"
+						]
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#inputNodegroupId",
+						"Constraints": "",
+						"SparqlID": "?inputNodegroupId",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#serviceURL",
+						"Constraints": "",
+						"SparqlID": "?serviceURL",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#Retrieval",
+				"SparqlID": "?Retrieval",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#Inference",
+				"SparqlID": "?Inference",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#sequence",
+						"Constraints": "",
+						"SparqlID": "?sequence",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Inference"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://research.ge.com/semtk/fdcCacheSpec#Inference"
+						],
+						"ConnectBy": "inference",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcCacheSpec#inference"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Retrieval"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://research.ge.com/semtk/fdcCacheSpec#Retrieval"
+						],
+						"ConnectBy": "retrieval",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcCacheSpec#retrieval"
+					}
+				],
+				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheStep",
+				"SparqlID": "?FdcCacheStep",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#id",
+						"Constraints": "",
+						"SparqlID": "?id",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?FdcCacheStep"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://research.ge.com/semtk/fdcCacheSpec#FdcCacheStep"
+						],
+						"ConnectBy": "step",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcCacheSpec#step"
+					}
+				],
+				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheSpec",
+				"SparqlID": "?FdcCacheSpec",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?sequence"
+			}
+		],
+		"groupBy": [
+			"?id",
+			"?sequence",
+			"?inputNodegroupId",
+			"?serviceURL"
+		],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?FdcCacheSpec",
+				"type": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheSpec",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?FdcCacheStep",
+				"type": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheStep",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Inference",
+				"type": "http://research.ge.com/semtk/fdcCacheSpec#Inference",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Retrieval",
+				"type": "http://research.ge.com/semtk/fdcCacheSpec#Retrieval",
+				"mapping": [],
+				"props": []
+			}
+		]
+	},
+	"plotSpecs": []
+}

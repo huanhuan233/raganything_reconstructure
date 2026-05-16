@@ -1,0 +1,463 @@
+{
+  "workflow_id": "default-industrial-ontology-object-library",
+  "name": "本体对象建库默认工作流",
+  "description": "与实体关系抽取验证（工业增强）相同的解析与图谱前置；在 industrial.graph_build 之后串联 ontology.object.define → constraint.extract → semantic.runtime.plan → constraint.runtime.filter → ontology.graph.persist / semantic.relation.persist / constraint.relation.persist（persist 默认为 dry_run，需适配器时关闭）→ industrial.graph.persist → storage.persist",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "workflow.start",
+      "config": {},
+      "position": {
+        "x": 84,
+        "y": 98
+      },
+      "label": "开始"
+    },
+    {
+      "id": "document_parse",
+      "type": "document.parse",
+      "config": {
+        "source_path": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything重构\\RAG-Anything\\Inputs\\uploaded\\HB_Z_223.3-2003_3_337277b8.pdf",
+        "parser": "mineru",
+        "parse_method": "auto",
+        "pages_per_split": 2,
+        "doc_id": null,
+        "mock_text": "模拟解析得到的正文片段。"
+      },
+      "position": {
+        "x": 364,
+        "y": 98
+      },
+      "label": "文档解析"
+    },
+    {
+      "id": "content_filter",
+      "type": "content.filter",
+      "config": {
+        "drop_empty": true,
+        "keep_page_numbers": true
+      },
+      "position": {
+        "x": 644,
+        "y": 98
+      },
+      "label": "内容过滤"
+    },
+    {
+      "id": "multimodal_process",
+      "type": "multimodal.process",
+      "config": {
+        "use_vlm": true,
+        "vlm_model": "Qwen/Qwen3.6-35B-A3B",
+        "vlm_prompt": "请描述该图片、表格或视觉区域中的关键信息，用于后续RAG检索。",
+        "max_visual_items": 100,
+        "process_types": [
+          "chart",
+          "equation",
+          "figure",
+          "footer",
+          "formula",
+          "formula_caption",
+          "formula_label",
+          "image",
+          "image_caption",
+          "inline_formula",
+          "page_number",
+          "seal",
+          "sheet",
+          "table",
+          "table_caption",
+          "table_footnote"
+        ],
+        "resume_from_cache": true,
+        "resume_cache_key": ""
+      },
+      "position": {
+        "x": 924,
+        "y": 98
+      },
+      "label": "多模态预处理"
+    },
+    {
+      "id": "content_route",
+      "type": "content.route",
+      "config": {
+        "keep_unrouted": true,
+        "drop_discard_types": true
+      },
+      "position": {
+        "x": 1204,
+        "y": 98
+      },
+      "label": "内容路由"
+    },
+    {
+      "id": "industrial_structure",
+      "type": "industrial.structure_recognition",
+      "config": {
+        "enabled_parsers": [
+          "title_hierarchy",
+          "process_flow",
+          "table_structure",
+          "form_structure"
+        ],
+        "enable_validation": true,
+        "enable_semantic_completion": false
+      },
+      "position": {
+        "x": 1484,
+        "y": 98
+      },
+      "label": "工业结构识别"
+    },
+    {
+      "id": "industrial_table",
+      "type": "industrial.table_parse",
+      "config": {},
+      "position": {
+        "x": 1764,
+        "y": 98
+      },
+      "label": "工业表结构解析"
+    },
+    {
+      "id": "industrial_constraint",
+      "type": "industrial.constraint_extract",
+      "config": {
+        "enable_validation": true,
+        "enabled_parsers": [
+          "title_hierarchy",
+          "process_flow",
+          "table_structure",
+          "form_structure"
+        ]
+      },
+      "position": {
+        "x": 2044,
+        "y": 98
+      },
+      "label": "工业约束抽取"
+    },
+    {
+      "id": "industrial_process",
+      "type": "industrial.process_extract",
+      "config": {},
+      "position": {
+        "x": 2324,
+        "y": 98
+      },
+      "label": "工业流程抽取"
+    },
+    {
+      "id": "chunk_split",
+      "type": "chunk.split",
+      "config": {
+        "chunk_token_size": 1200,
+        "chunk_overlap_token_size": 100,
+        "include_multimodal_descriptions": true,
+        "skip_pipelines": [
+          "discard_pipeline"
+        ]
+      },
+      "position": {
+        "x": 2604,
+        "y": 98
+      },
+      "label": "文本切片"
+    },
+    {
+      "id": "embedding_index",
+      "type": "embedding.index",
+      "config": {
+        "include_raw_item": true,
+        "allow_without_vector": true,
+        "batch_size": 16
+      },
+      "position": {
+        "x": 2884,
+        "y": 98
+      },
+      "label": "向量索引"
+    },
+    {
+      "id": "entity_relation_extract",
+      "type": "entity_relation.extract",
+      "config": {
+        "model": "deepseek-ai/DeepSeek-V3.2",
+        "entity_extract_max_gleaning": 1,
+        "language": "auto",
+        "include_multimodal_chunks": true,
+        "max_chunks": 200,
+        "use_llm_cache": false
+      },
+      "position": {
+        "x": 3164,
+        "y": 98
+      },
+      "label": "实体关系抽取"
+    },
+    {
+      "id": "relation_merge",
+      "type": "relation.merge",
+      "config": {
+        "merge_engine": "lightrag",
+        "merge_strategy": "canonical",
+        "similarity_threshold": 0.9,
+        "use_llm_summary_on_merge": false
+      },
+      "position": {
+        "x": 3444,
+        "y": 98
+      },
+      "label": "关系归并"
+    },
+    {
+      "id": "industrial_graph",
+      "type": "industrial.graph_build",
+      "config": {},
+      "position": {
+        "x": 3724,
+        "y": 98
+      },
+      "label": "工业图谱构建"
+    },
+    {
+      "id": "ontology_object_define",
+      "type": "ontology.object.define",
+      "config": {
+        "ontology_type": "Part",
+        "object_id": "",
+        "label": "默认占位零件",
+        "attributes": {},
+        "source_refs": []
+      },
+      "position": {
+        "x": 4004,
+        "y": 98
+      },
+      "label": "工业本体对象定义"
+    },
+    {
+      "id": "isr_constraint_extract",
+      "type": "constraint.extract",
+      "config": {},
+      "position": {
+        "x": 4284,
+        "y": 98
+      },
+      "label": "语义约束抽取（ISR）"
+    },
+    {
+      "id": "isr_semantic_plan",
+      "type": "semantic.runtime.plan",
+      "config": {
+        "use_dag_topo": true
+      },
+      "position": {
+        "x": 4592,
+        "y": 84
+      },
+      "label": "语义运行时执行计划 IR"
+    },
+    {
+      "id": "isr_constraint_filter",
+      "type": "constraint.runtime.filter",
+      "config": {
+        "explain_all": false
+      },
+      "position": {
+        "x": 4844,
+        "y": 98
+      },
+      "label": "工业运行时约束过滤"
+    },
+    {
+      "id": "ontology_graph_persist",
+      "type": "ontology.graph.persist",
+      "config": {
+        "dry_run": false
+      },
+      "position": {
+        "x": 5124,
+        "y": 98
+      },
+      "label": "本体对象图持久化"
+    },
+    {
+      "id": "semantic_relation_persist",
+      "type": "semantic.relation.persist",
+      "config": {
+        "dry_run": false
+      },
+      "position": {
+        "x": 5404,
+        "y": 98
+      },
+      "label": "语义关系持久化"
+    },
+    {
+      "id": "constraint_relation_persist",
+      "type": "constraint.relation.persist",
+      "config": {
+        "dry_run": false
+      },
+      "position": {
+        "x": 5684,
+        "y": 98
+      },
+      "label": "约束关系持久化"
+    },
+    {
+      "id": "industrial_graph_persist",
+      "type": "industrial.graph.persist",
+      "config": {
+        "graph_backend": "neo4j",
+        "namespace": "ceshi05",
+        "enable_native_labels": true,
+        "enable_typed_relationships": true,
+        "validation": true,
+        "batch_size": 100,
+        "dry_run": false,
+        "create_if_missing": true
+      },
+      "position": {
+        "x": 5964,
+        "y": 98
+      },
+      "label": "工业图谱持久化"
+    },
+    {
+      "id": "storage_persist",
+      "type": "storage.persist",
+      "config": {
+        "vector_storage": {
+          "backend": "milvus",
+          "mode": "create",
+          "collection": "ceshi05",
+          "dimension": 4096,
+          "metric_type": "COSINE",
+          "index_type": "IVF_FLAT",
+          "auto_create_index": true,
+          "create_if_missing": true
+        }
+      },
+      "position": {
+        "x": 6244,
+        "y": 98
+      },
+      "label": "存储落盘"
+    },
+    {
+      "id": "end",
+      "type": "workflow.end",
+      "config": {},
+      "position": {
+        "x": 6524,
+        "y": 98
+      },
+      "label": "结束"
+    }
+  ],
+  "edges": [
+    [
+      "start",
+      "document_parse"
+    ],
+    [
+      "document_parse",
+      "content_filter"
+    ],
+    [
+      "content_filter",
+      "multimodal_process"
+    ],
+    [
+      "multimodal_process",
+      "content_route"
+    ],
+    [
+      "content_route",
+      "industrial_structure"
+    ],
+    [
+      "industrial_structure",
+      "industrial_table"
+    ],
+    [
+      "industrial_table",
+      "industrial_constraint"
+    ],
+    [
+      "industrial_constraint",
+      "industrial_process"
+    ],
+    [
+      "industrial_process",
+      "chunk_split"
+    ],
+    [
+      "chunk_split",
+      "embedding_index"
+    ],
+    [
+      "embedding_index",
+      "entity_relation_extract"
+    ],
+    [
+      "entity_relation_extract",
+      "relation_merge"
+    ],
+    [
+      "relation_merge",
+      "industrial_graph"
+    ],
+    [
+      "industrial_graph",
+      "ontology_object_define"
+    ],
+    [
+      "ontology_object_define",
+      "isr_constraint_extract"
+    ],
+    [
+      "isr_constraint_extract",
+      "isr_semantic_plan"
+    ],
+    [
+      "isr_semantic_plan",
+      "isr_constraint_filter"
+    ],
+    [
+      "isr_constraint_filter",
+      "ontology_graph_persist"
+    ],
+    [
+      "ontology_graph_persist",
+      "semantic_relation_persist"
+    ],
+    [
+      "semantic_relation_persist",
+      "constraint_relation_persist"
+    ],
+    [
+      "constraint_relation_persist",
+      "industrial_graph_persist"
+    ],
+    [
+      "industrial_graph_persist",
+      "storage_persist"
+    ],
+    [
+      "storage_persist",
+      "end"
+    ]
+  ],
+  "entry_node_ids": [
+    "start"
+  ],
+  "input_data": {
+    "source_path": "Inputs/3.pdf"
+  },
+  "created_at": "2026-05-16T12:01:56Z",
+  "updated_at": "2026-05-16T12:10:00Z"
+}

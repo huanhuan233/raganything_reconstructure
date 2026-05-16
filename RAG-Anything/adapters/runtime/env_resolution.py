@@ -56,3 +56,8 @@ def effective_neo4j_user() -> str:
 
 def effective_neo4j_password() -> str:
     return (os.getenv("NEO4J_STORAGE_PASSWORD") or os.getenv("NEO4J_PASSWORD") or "").strip()
+
+
+def effective_neo4j_database() -> str:
+    """Neo4j 5+ multi-db；与 workflow_api.discover、knowledge.persist 对齐，避免写到默认库却扫另一库。"""
+    return (os.getenv("NEO4J_DATABASE") or "neo4j").strip() or "neo4j"

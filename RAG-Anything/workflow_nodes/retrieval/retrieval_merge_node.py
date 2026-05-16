@@ -10,6 +10,7 @@ from runtime_kernel.node_runtime.base_node import BaseNode
 from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.content_access import ContentAccess
 
 
 def _as_dict(v: Any) -> dict[str, Any]:
@@ -132,10 +133,20 @@ class RetrievalMergeNode(BaseNode):
             "vision": _safe_float(cfg.get("vision_weight", 1.0), 1.0),
         }
 
+        retrieval_results = ContentAccess.get_retrieval_results(context, self.node_id)
+        rerank_results = ContentAccess.get_rerank_results(context, self.node_id)
         source_inputs: dict[str, list[dict[str, Any]]] = {
-            "vector": _as_list_of_dict(payload.get("vector_results")),
+            "vector": _as_list_of_dict(
+                payload.get("vector_results")
+                or payload.get("retrieval_results")
+                or retrieval_results
+            ),
             "graph": _as_list_of_dict(payload.get("graph_results")),
-            "keyword": _as_list_of_dict(payload.get("keyword_results")),
+            "keyword": _as_list_of_dict(
+                payload.get("rerank_results")
+                or rerank_results
+                or payload.get("keyword_results")
+            ),
             "vision": _as_list_of_dict(payload.get("vision_results")),
         }
         source_distribution = {k: len(v) for k, v in source_inputs.items() if v}
@@ -296,8 +307,10 @@ class RetrievalMergeNode(BaseNode):
             "top_k": top_k,
         }
         out = dict(payload)
+        out["merged_results"] = unified_results
         out["unified_results"] = unified_results
         out["merge_summary"] = summary
+        ContentAccess.set_retrieval_results(context, self.node_id, unified_results)
         context.log(
             f"[RetrievalMergeNode] strategy={fusion_strategy} input={total_input} output={total_output} dedup={deduplicated}"
         )

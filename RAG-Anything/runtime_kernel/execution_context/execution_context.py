@@ -7,11 +7,15 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from runtime_kernel.entities.node_output import NodeOutput
+from runtime_kernel.runtime_state.constraint_state import ConstraintState
 from runtime_kernel.runtime_state.content_pool import ContentPool
 from runtime_kernel.runtime_state.execution_state import ExecutionState
 from runtime_kernel.runtime_state.graph_state import GraphState
+from runtime_kernel.runtime_state.industrial_runtime_state import IndustrialRuntimeState
 from runtime_kernel.runtime_state.node_state import NodeState
+from runtime_kernel.runtime_state.ontology_state import OntologyState
 from runtime_kernel.runtime_state.runtime_registry import RuntimeRegistry
+from runtime_kernel.runtime_state.semantic_state import SemanticRuntimeState
 from runtime_kernel.runtime_state.state_types import CONTENT_BUCKETS
 from runtime_kernel.runtime_state.variable_pool import VariablePool
 
@@ -47,6 +51,12 @@ class ExecutionContext:
     execution_metadata: dict[str, Any] = field(default_factory=dict)
     runtime_registry: RuntimeRegistry = field(default_factory=RuntimeRegistry)
     raw_node_outputs: dict[str, Any] = field(default_factory=dict)
+    ontology_state: OntologyState = field(default_factory=OntologyState)
+    constraint_state: ConstraintState = field(default_factory=ConstraintState)
+    semantic_runtime_state: SemanticRuntimeState = field(default_factory=SemanticRuntimeState)
+    industrial_runtime_meta: IndustrialRuntimeState = field(default_factory=IndustrialRuntimeState)
+    runtime_constraints: list[Any] = field(default_factory=list)
+    semantic_plan: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if self.runtime_state is None:

@@ -15,6 +15,8 @@ from runtime_kernel.entities.content_types import is_formula_type, is_table_type
 from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.content_access import ContentAccess
+from runtime_kernel.runtime_state.variable_access import VariableAccess
 
 def _env_embed_provider() -> str:
     return (os.getenv("EMBEDDING_BINDING") or "default").strip() or "default"
@@ -396,31 +398,39 @@ class EmbeddingIndexNode(BaseNode):
         return out
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
-        if not isinstance(input_data, dict):
-            return NodeResult(success=False, error="embedding.index 期望输入为 dict")
-        payload = dict(input_data)
+        payload = dict(input_data) if isinstance(input_data, dict) else {}
 
-        routes = input_data.get("routes")
-        chunks_input = input_data.get("chunks")
+        chunks_from_pool = ContentAccess.get_chunks(context, self.node_id)
+        routes = payload.get("routes")
+        chunks_input = chunks_from_pool if isinstance(chunks_from_pool, list) else payload.get("chunks")
         has_chunks = isinstance(chunks_input, list)
         if not has_chunks and not isinstance(routes, dict):
             return NodeResult(success=False, error="embedding.index 缺少 routes(dict) 或 chunks(list)")
 
         strategy = dict(DEFAULT_EMBEDDING_STRATEGY)
         strategy.update(self._json_to_dict(self.config.get("embedding_strategy")))
+        vp_provider = VariableAccess.get_embedding_provider(context, default="")
+        vp_backend = VariableAccess.get_vector_backend(context, default="")
+        if vp_provider:
+            for p in strategy.keys():
+                one = self._as_dict(strategy.get(p))
+                one["provider"] = vp_provider
+                strategy[p] = one
+        if vp_backend:
+            context.variable_pool.set("vector_backend", vp_backend)
         skip_pipelines = {x.strip() for x in self._json_to_list(self.config.get("skip_pipelines")) if x.strip()}
         include_raw_item = bool(self.config.get("include_raw_item", True))
         allow_without_vector = bool(self.config.get("allow_without_vector", True))
         batch_size = int(self.config.get("batch_size", 16) or 16)
         resume_from_cache = bool(self.config.get("resume_from_cache", True))
         source_path = str(
-            input_data.get("source_path")
-            or (input_data.get("parsed_document") or {}).get("source_file")
+            payload.get("source_path")
+            or (payload.get("parsed_document") or {}).get("source_file")
             or ""
         ).strip()
         explicit_cache_key = str(
             self.config.get("resume_cache_key")
-            or (input_data.get("resume_cache_key") if isinstance(input_data, dict) else "")
+            or payload.get("resume_cache_key")
             or ""
         ).strip()
         cache_key = self._resolve_cache_key(
@@ -437,7 +447,7 @@ class EmbeddingIndexNode(BaseNode):
         if embedding_func is None and not allow_without_vector:
             return NodeResult(success=False, error="embedding.index 未注入 embedding_func 且 allow_without_vector=false")
 
-        multimodal_descriptions = input_data.get("multimodal_descriptions")
+        multimodal_descriptions = payload.get("multimodal_descriptions")
         if not isinstance(multimodal_descriptions, list):
             multimodal_descriptions = []
         desc_idx = self._build_desc_index([x for x in multimodal_descriptions if isinstance(x, dict)])
@@ -661,8 +671,10 @@ class EmbeddingIndexNode(BaseNode):
         # 保留上游 payload，增量追加 embedding 输出，避免后续节点（如 entity_relation.extract）
         # 因 chunks/routes/content_list 被覆盖而拿不到输入。
         out = dict(payload)
+        out["embeddings"] = records
         out["embedding_records"] = records
         out["embedding_summary"] = summary
+        ContentAccess.set_embeddings(context, self.node_id, records)
         return NodeResult(
             success=True,
             data=out,

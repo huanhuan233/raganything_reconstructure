@@ -117,3 +117,35 @@ def detect_next_step_cycle(edges: list[NormalizedIndustrialEdge]) -> bool:
                 queue.append(nxt)
     return visited != len(indegree)
 
+
+def merge_named_bucket_models(
+    context: Any,
+    bucket: str,
+    new_records: list[dict[str, Any]],
+    *,
+    id_key: str = "object_id",
+) -> list[dict[str, Any]]:
+    """
+    ContentPool bucket 若为 list[str|dict]，则按 ``id_key`` 去重重写。
+    （工业语义运行时：ontology_objects / constraints 等）。
+    """
+
+    prev = context.content_pool.get(bucket)
+    acc: dict[str, dict[str, Any]] = {}
+    if isinstance(prev, list):
+        for it in prev:
+            if isinstance(it, dict) and id_key in it:
+                acc[str(it[id_key])] = dict(it)
+            elif hasattr(it, "model_dump"):
+                d = dict(it.model_dump())
+                oid = str(d.get(id_key) or "")
+                if oid:
+                    acc[oid] = d
+    for it in new_records:
+        oid = str(it.get(id_key) or "")
+        if oid:
+            acc[oid] = dict(it)
+    merged = list(acc.values())
+    context.content_pool.put(bucket, merged)
+    return merged
+

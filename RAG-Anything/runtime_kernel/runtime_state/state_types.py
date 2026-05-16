@@ -35,4 +35,9 @@ CONTENT_BUCKETS: tuple[str, ...] = (
     "retrieval_results",
     "rerank_results",
     "generated_content",
+    # Industrial Semantic Runtime
+    "ontology_objects",
+    "constraints",
+    "industrial_candidates",
+    "industrial_filtered",
 )

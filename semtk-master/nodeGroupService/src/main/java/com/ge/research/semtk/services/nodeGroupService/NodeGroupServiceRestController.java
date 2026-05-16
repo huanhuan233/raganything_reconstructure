@@ -1,0 +1,1336 @@
+/**
+ ** Copyright 2016-18 General Electric Company
+ **
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
+package com.ge.research.semtk.services.nodeGroupService;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
+
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.belmont.*;
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.services.nodeGroupService.requests.*;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.utility.ImportSpec;
+import com.ge.research.semtk.load.utility.ImportSpecHandler;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
+import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
+import com.ge.research.semtk.ontologyTools.OntologyClass;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyPath;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
+import com.ge.research.semtk.plotting.PlotSpec;
+import com.ge.research.semtk.plotting.PlotSpecs;
+import com.ge.research.semtk.plotting.PlotlyPlotSpec;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
+
+import io.swagger.v3.oas.annotations.Operation;
+
+
+@RestController
+@RequestMapping("/nodeGroup")
+@CrossOrigin
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
+public class NodeGroupServiceRestController {
+ 	static final String SERVICE_NAME = "nodeGroupService";
+
+	public static final String QUERYFIELDLABEL = "SparqlQuery";
+	public static final String QUERYTYPELABEL = "QueryType";
+	private static final String QUERYMESSAGELABEL = "QueryMessage";
+	
+	public static final String INVALID_SPARQL_RATIONALE_LABEL = "InvalidSparqlRationale";
+
+	public static final String RET_KEY_NODEGROUP = "nodegroup";
+	public static final String RET_KEY_SPARQLID = "sparqlID";
+
+	@Autowired
+	private OntologyInfoServiceProperties oinfo_props;
+	@Autowired 
+	private QueryServiceProperties query_prop;
+	@Autowired
+	private ResultsServiceProperties results_props;
+	@Autowired
+	private ServicesGraphProperties servicesgraph_props;
+	@Autowired
+	private AuthorizationProperties auth_prop;
+	@Autowired 
+	private ApplicationContext appContext;
+	
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+		oinfo_props.validateWithExit();
+		query_prop.validateWithExit();
+		results_props.validateWithExit();
+		servicesgraph_props.validateWithExit();
+	}
+
+	@CrossOrigin
+	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
+	public void corsHeaders(HttpServletResponse response) {
+	    response.addHeader("Access-Control-Allow-Origin", "*");
+	    response.addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
+	    response.addHeader("Access-Control-Max-Age", "3600");
+	}
+	
+	@Operation(
+			summary="Find paths from a class to a nodegroup.",
+			description="Returns pathList and pathWarnings."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/findAllPaths", method=RequestMethod.POST)
+	public JSONObject findAllPaths(@RequestBody PathFindingRequest requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME = "findAllPaths";
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet();
+		
+		try {	
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			tracker.createJob(jobId);
+			tracker.setJobPercentComplete(jobId, 1, "Start path-finding");
+			
+			new Thread(() -> {
+				try {
+					HeadersManager.setHeaders(headers);
+					SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+					SparqlConnection conn = sgJson.getSparqlConn();
+					NodeGroup ng = sgJson.getNodeGroup();
+					SimpleResultSet results = new SimpleResultSet(true);
+					ResultsClient rclient = results_props.getClient();
+					JSONArray pathJsonArr = new JSONArray();
+					JSONArray pathWarnArr = new JSONArray();
+					
+					query_prop.setUserAndPasswordIfMissing(conn);
+					query_prop.setUserAndPasswordIfMissing(sgJson);
+					
+					// Only if there are nodes, hence possibly some paths...
+					if (ng.getNodeCount() > 0) {
+						
+						// 1. Retrieve OInfo sync, and set path-finding flags
+						tracker.setJobPercentComplete(jobId, 2, "Retrieving ontology");
+						OntologyInfo oInfo = this.retrieveOInfo(conn);
+						oInfo.setPathFindingMaxLengthRange(requestBody.getMaxLengthRange());
+						oInfo.setPathFindingMaxPathCount(requestBody.getMaxPathCount()); 
+						oInfo.setPathFindingMaxPathLength(requestBody.getMaxPathLength());
+						oInfo.setPathFindingMaxTimeMsec(requestBody.getMaxTimeMsec());
+						
+						
+						// 2. Retrieve Predicate Stats
+						PredicateStats predStats = null;
+						if (requestBody.getPropsInDataFlag() || requestBody.getNodegroupInDataFlag()) {
+							predStats = this.retrievePredicateStats(conn, jobId, 25, 50);
+						}
+						
+						// 3. Find All Paths
+						tracker.setJobPercentComplete(jobId, 51, "Building Paths");
+						ng.noInflateNorValidate(oInfo);
+						HashSet<String> classes = new HashSet<String>();
+						classes.addAll(ng.getNodeURIStrings());
+						if (! requestBody.getNodegroupInDataFlag()) {
+							// discard if not nodegroupInDataFlag
+							ng = null;
+						}
+						
+						ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes, predStats, ng, conn);
+						
+						tracker.setJobPercentComplete(jobId, 98, "");
+	
+						// 4. Build and send result
+						
+						for (OntologyPath p: pathList) {
+							pathJsonArr.add(p.toJson());
+						}
+						
+						ArrayList<String> pathWarnings = oInfo.getPathWarnings();
+						for (String p : pathWarnings) {
+							pathWarnArr.add(p);
+						}
+						
+					}
+					results.addResult("pathList", pathJsonArr);
+					results.addResult("pathWarnings", pathWarnArr);
+					rclient.execStoreBlobResults(jobId, results.toJson());
+					tracker.setJobSuccess(jobId);
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+						LocalLogger.printStackTrace(e);
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			}).start();
+		
+			retval.addJobId(jobId);
+			retval.setSuccess(true);
+			
+		} catch(Exception e){
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();
+	}
+	
+	/*
+	 * generate** endpoints return a SimpleResultSet
+	 *     failure - unexpected exception 
+	 *     		rationale - the exception message
+	 *     no valid sparql - succeeds
+	 *         SparqlQuery - is a short SPARQL comment
+	 *         QueryType - "INVALID"
+	 *     success -
+	 *       	SparqlQuery - the SPARQL
+	 *          QueryType - same "SELECT" "COUNT_ALL" "DELETE" "FILTER" "ASK" "CONSTRUCT"
+	 */
+	@Operation(
+			summary="Generate a SELECT query",
+			description="Generic query with no special options."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/generateSelect", method=RequestMethod.POST)
+	public JSONObject generateSelectSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			ng.noInflateNorValidate(retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection())));
+
+			String query = ng.generateSparql(AutoGeneratedQueryTypes.SELECT_DISTINCT, false, null, null);
+			retval = this.generateSuccessOutput("SELECT", query);
+			
+		}
+		catch(NoValidSparqlException ise) {
+			// Handle known sparql generation errors
+			retval = this.generateNoValidSparqlOutput("generateSelect", ise.getMessage());
+		}
+		catch(Exception eee){
+			// Unexpected errors
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateSelect", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();
+	}
+	
+	@Operation(
+			summary="Generate a COUNT query",
+			description="Generic query with no special options"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/generateCountAll", method=RequestMethod.POST)
+	public JSONObject generateCountAllSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			ng.noInflateNorValidate(retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection())));
+
+			String query = ng.generateSparql(AutoGeneratedQueryTypes.COUNT, false, null, null);
+			retval = this.generateSuccessOutput("COUNT_ALL", query);
+			
+		}
+		catch(NoValidSparqlException ise) {
+			retval = this.generateNoValidSparqlOutput("generateCountAll", ise.getMessage());
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateCountAll", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();
+	}
+
+	@Operation(
+			summary="Generate DELETE query"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/generateDelete", method=RequestMethod.POST)
+	public JSONObject generateDeleteSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			ng.noInflateNorValidate(retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection())));
+
+			String query = ng.generateSparqlDelete();
+			
+			retval = this.generateSuccessOutput("DELETE", query);
+			
+		}
+		catch(NoValidSparqlException ise) {
+			retval = this.generateNoValidSparqlOutput("generateDelete", ise.getMessage());
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateDelete", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();
+	}
+
+	@Operation(
+			summary="Generate filter query",
+			description="Returns all values for a given sparqlId"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/generateFilter", method=RequestMethod.POST)
+	public JSONObject generateFilterSparql(@RequestBody NodegroupSparqlIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			ng.noInflateNorValidate(retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection())));
+
+			Returnable item = ng.getNodeBySparqlID(requestBody.getSparqlID());
+			if (item == null) {
+				item = ng.getPropertyItemBySparqlID(requestBody.getSparqlID());
+			}
+			String query = ng.generateSparql(AutoGeneratedQueryTypes.FILTER_CONSTRAINT, false, -1, item);
+			
+			retval = this.generateSuccessOutput("FILTER", query);
+			
+		}
+		catch(NoValidSparqlException ise) {
+			retval = this.generateNoValidSparqlOutput("generateFilter", ise.getMessage());
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateFilter", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();
+	}
+
+	@Operation(
+			summary="Generate ASK query"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/generateAsk", method=RequestMethod.POST)
+	public JSONObject generateAskSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			ng.noInflateNorValidate(retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection())));
+
+			String query = ng.generateSparqlAsk();
+			retval = this.generateSuccessOutput("ASK", query);
+			
+			
+		}
+		catch(NoValidSparqlException ise) {
+			retval = this.generateNoValidSparqlOutput("generateAsk", ise.getMessage());
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateAsk", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/generateConstruct", method=RequestMethod.POST)
+	public JSONObject generateConstructSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			ng.noInflateNorValidate(retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection())));
+
+			String query = ng.generateSparqlConstruct();
+			
+			retval = this.generateSuccessOutput("CONSTRUCT", query);
+			
+		}
+		catch(NoValidSparqlException ise) {
+			retval = this.generateNoValidSparqlOutput("generateConstruct", ise.getMessage());
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateConstruct", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();
+	}
+	@Operation(
+			summary="Get table of runtime constraints",
+			description="Returns table of: \"valueId\", \"itemType\", \"valueType\""
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getRuntimeConstraints", method=RequestMethod.POST)
+	public JSONObject getRuntimeConstraints(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		TableResultSet retval = null;
+		
+		try{
+			NodeGroup ng = requestBody.buildNodeGroup();
+			RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
+			retval = new TableResultSet(true); 
+			
+			//  it is awful that this returns a table of descriptions
+			//       the RunTimeConstrainedItems needs fromJson but it has a nodegroup pointer
+			//       Serious re-design may be needed
+			retval.addResults(rtci.getConstrainedItemsDescription() );
+		}
+		catch(Exception eee){
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraints", eee);
+			LocalLogger.printStackTrace(eee);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Give a property a SparqlID and set isReturned.",
+			description="If it is illegal or duplicate, SparqlID will be modified to a close match."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/setPropertySparqlId", method=RequestMethod.POST)
+	public JSONObject setAndReturnNewSparqlId(@RequestBody NodegroupPropertyRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			requestBody.validate();
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			NodeGroup ng = sgJson.getNodeGroup();
+			
+			
+			Node snode = ng.getNodeBySparqlID(requestBody.getNodeSparqlId());
+			if (snode == null) {
+				throw new Exception("Can't find node with sparqlID: " + requestBody.getNodeSparqlId());
+			}
+			PropertyItem prop = snode.getPropertyByURIRelation(requestBody.getPropertyUri());
+			if (prop == null) {
+				throw new Exception("Can't find property: " + requestBody.getPropertyUri());
+			}
+			ng.changeSparqlID(prop, requestBody.getNewPropSparqlId());
+			prop.setIsReturned(requestBody.isReturned());
+			
+			sgJson.setNodeGroup(ng);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.addResult(RET_KEY_SPARQLID, prop.getSparqlID());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "setIsReturned", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Set isReturned for existing sparqlID(s)"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/setIsReturned", method=RequestMethod.POST)
+	public JSONObject setReturnsBySparqlId(@RequestBody NodegroupSparqlIdReturnedRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			requestBody.validate();
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			NodeGroup ng = sgJson.getNodeGroup();
+			
+			for (SparqlIdReturnedTuple tuple : requestBody.getSparqlIdReturnedTuples()) {
+				Returnable item = ng.getItemBySparqlID(tuple.getSparqlId());
+				if (item == null) {
+					throw new Exception("sparqlId was not found: " + tuple.getSparqlId());
+				}
+				ng.setIsReturned(item, tuple.isReturned());
+			}
+			
+			// put modified nodegroup back into sgJson and return
+			sgJson.setNodeGroup(ng);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "setIsReturned", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	@Operation(
+			summary="Change sparqlIds in nodegroup"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/changeSparqlIds", method=RequestMethod.POST)
+	public JSONObject renameItems(@RequestBody NodegroupSparqlIdTupleRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			requestBody.validate();
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			NodeGroup ng = sgJson.getNodeGroup();
+			
+			
+			for (SparqlIdTuple tuple : requestBody.getSparqlIdTuples()) {
+				Returnable itemFrom = ng.getItemBySparqlID(tuple.getSparqlIdFrom());
+				if (itemFrom == null) {
+					throw new Exception("sparqlId was not found: " + tuple.getSparqlIdFrom());
+				}
+				String newId = ng.changeSparqlID(itemFrom, tuple.getSparqlIdTo());
+				if (!newId.equals(tuple.getSparqlIdTo())) {
+					throw new Exception("sparqlId is already in use: " + tuple.getSparqlIdTo() + ". System suggested: " + newId);
+				}
+			}
+			
+			// put modified nodegroup back into sgJson and return
+			sgJson.setNodeGroup(ng);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "changeSparqlIds", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Get list of nodegroup returns"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getReturnedSparqlIds", method=RequestMethod.POST)
+	public JSONObject getReturns(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		TableResultSet retval = new TableResultSet(false);
+
+		try {
+			requestBody.validate();
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			NodeGroup ng = sgJson.getNodeGroup();
+			
+			ArrayList<String> ids = ng.getReturnedSparqlIDs();
+			
+			// create a new table of sparqlId strings
+			Table table = new Table(new String[]{"sparqlId"}, new String[]{"string"});
+			for (String id : ids) {
+				table.addRow(new String[] { id } );
+			}
+			retval.addResults(table);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getReturnedSparqlIds", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Get columns required by import spec",
+			description="Returns \"columnNames\" array"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getIngestionColumns", method=RequestMethod.POST)
+	public JSONObject  getIngestionColumns(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
+			String colNames[] = handler.getColNamesUsed();
+			
+			retval.addResult("columnNames", colNames);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getIngestionColumns", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Get ingestion validation rules",
+			description="Returns columnNames array and dataValidator json array"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getIngestionColumnInfo", method=RequestMethod.POST)
+	public JSONObject  getIngestionValidations(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
+			retval.addResult("columnNames", handler.getColNamesUsed());
+			retval.addResult("dataValidator", handler.getDataValidator().toJsonArray());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getIngestionColumnInfo", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Get a sample CSV that could be ingested",
+			description="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getSampleIngestionCSV", method=RequestMethod.POST)
+	public JSONObject getSampleIngestionCSV(@RequestBody SampleCsvRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
+			
+			String sampleCSV="";
+			switch (requestBody.getFormat()) {
+			case("default"):
+				sampleCSV = handler.getSampleIngestionCSV();
+				break;
+			case "simple":
+				sampleCSV = handler.getSampleCSV();
+				break;
+			default:
+			} // getter threw exception
+			
+			retval.addResult("sampleCSV", sampleCSV);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getSampleIngestionCSV", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+
+	@Operation(
+			summary="Build a valid nodegroup constrain, with the provided parameters, to be used in nodegroup queries",
+			description="Returns \"sampleOBJ\" with a JSON constrain populated with the the provided request parameters: \n" +
+					"sparqlId, operation and operandsList. \n It also validates the parameters producing 400 Bad Request exceptions" +
+					" including error explanations"
+	)
+	@CrossOrigin
+	@RequestMapping(value="/buildRuntimeConstraintJSON", method=RequestMethod.POST,
+			consumes= MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public JSONObject buildRuntimeConstraintJSON(@RequestBody ConstraintRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+
+			// the buildRuntimeConstraintJson() method below will validate the parameters for this method, producing
+			// an exception
+
+			String sparqlID = requestBody.getSparqlID();
+			SupportedOperations operation = requestBody.getOperation();
+			ArrayList<String> operandList = requestBody.getOperandList();
+			JSONObject constraintJSON = RuntimeConstraintManager.buildRuntimeConstraintJson(sparqlID, operation, operandList);
+
+			retval.addResult("constraintJSON", constraintJSON);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "buildRuntimeConstraintJSON", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();
+	}
+	
+	@Operation(
+			summary="Get a sample CSV that could be ingested",
+			description="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getSampleIngestionCSVMulti", method=RequestMethod.POST)
+	public JSONObject getSampleIngestionCSVMulti(@RequestBody NodegroupListRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson [] sgJsonArr = requestBody.getSparqlGraphJsonArray();
+			ArrayList<ImportSpecHandler> specList = new ArrayList<>();
+			for (int i=0; i < sgJsonArr.length; i++) {
+				specList.add(sgJsonArr[i].getImportSpecHandler());
+			}
+			
+			String sampleCSV = ImportSpecHandler.getSampleIngestionCSV(specList);
+			
+			retval.addResult("sampleCSV", sampleCSV);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getSampleIngestionCSVMulti", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	/*
+	 * SPARQL can't be generated. 
+	 * e.g. SELECT DISTINCT but nothing isReturned in the nodegroup
+	 */
+	private SimpleResultSet generateNoValidSparqlOutput(String endpoint, String message) {
+		// Failure SimpleResultSet
+		SimpleResultSet retval = new SimpleResultSet(false);
+		retval.addRationaleMessage(SERVICE_NAME, endpoint, "SPARQL query can't be generated from this nodegroup");
+
+		// InvalidSparqlRationale
+		retval.addResult(INVALID_SPARQL_RATIONALE_LABEL, message);
+		
+		// Query type "Invalid"
+		retval.addResult(QUERYTYPELABEL, "INVALID");
+		
+		return retval;
+	}
+	
+	private SimpleResultSet generateSuccessOutput(String queryType, String query) throws Exception {
+		SimpleResultSet retval = new SimpleResultSet(true);
+		retval.addResult(QUERYFIELDLABEL, query);
+		retval.addResult(QUERYTYPELABEL, queryType);
+		
+		return retval;
+	}
+	
+	//========== nodegroup building / editing endpoints ===========
+	//
+	//  Use 'newer' SparqlConnectionRequest and SNodeGroupRequest, etc. out of SpringUtilLib project
+	//  These don't need Java Client functions since in Java, you'd just call the NodeGroup functions themselves.
+	//  Usually return RET_KEY_NODEGROUP in a SimpleResultSet
+	//  Use the OInfoCache
+	//  JUnit testing is covered by the NodeGroup tests, etc.
+	
+	@Operation(
+			summary="Create a node group with single node"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/createNodeGroup", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject createNodeGroup(@RequestBody ConnectionUriRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "createNodeGroup";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
+			
+			OntologyInfo oInfo = retrieveOInfo(query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection()));
+			
+			NodeGroup ret = new NodeGroup();
+			Node newNode = ret.addNode(requestBody.getUri(), oInfo); 
+			
+			if (requestBody.getSparqlID() != null) { 
+				ret.changeSparqlID(newNode, requestBody.getSparqlID());
+			}
+			
+			retval.addResult(RET_KEY_NODEGROUP, ret.toJson());
+			retval.addResult(RET_KEY_SPARQLID, newNode.getSparqlID());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Build a node group with multiple nodes and connections"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/buildNodeGroup", method=RequestMethod.POST)
+	public JSONObject buildNodeGroup(@RequestBody BuildNodeGroupRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "buildNodeGroup";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			query_prop.setUserAndPasswordIfMissing(conn);
+			OntologyInfo oInfo = this.retrieveOInfo(conn);
+			NodeGroup ng = new NodeGroup();
+			
+			ng.setQueryType(AutoGeneratedQueryTypes.CONSTRUCT);
+			
+			// add nodes
+			for (SparqlIdClassUriTuple s : requestBody.getNodeList()) {
+				Node n = ng.addNode(s.getClassURI(), oInfo);
+				ng.changeSparqlID(n, s.getSparqlId());
+			}
+			
+			// add property
+			for (PropertyConnectionTriple p : requestBody.getConnList()) {
+				Node sub = ng.getNodeBySparqlID(p.getSubjectSparqlId());
+				
+				PropertyItem pItem = sub.getPropertyByURIRelation(p.getPropURI());
+				
+				if (pItem != null) {
+					// It is a data property so ignore the object and set return
+					ng.setIsReturned(pItem, true);
+				} else {
+					// It is an object property so connect the node
+					Node obj = ng.getNodeBySparqlID(p.getObjectSparqlId());
+					sub.setConnection(obj, p.getPropURI());
+				}
+			}
+			
+			SparqlGraphJson sgjson = new SparqlGraphJson(ng, conn);
+			retval.addResult(RET_KEY_NODEGROUP, sgjson.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+
+	@Operation(
+			summary="Create a nodegroup to retrieve"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/createConstructAllConnected", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject createConstructAllConnected(@RequestBody ConnectionUriClassRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "createConstructAllConnected";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			query_prop.setUserAndPasswordIfMissing(conn);
+			OntologyInfo oInfo = retrieveOInfo(conn);
+			PredicateStats stats = retrievePredicateStats(conn);
+			
+			NodeGroup ng = NodeGroup.createConstructAllConnected(requestBody.getClassName(), requestBody.getInstanceUri(), conn, oInfo, stats);
+			
+			SparqlGraphJson sgjson = new SparqlGraphJson(ng, conn);
+			retval.addResult(RET_KEY_NODEGROUP, sgjson.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+
+
+	@Operation(
+			summary="Adds a new node to an existing nodeGroup"
+	)
+	@CrossOrigin
+	@RequestMapping(value="/addNode", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject addNode(@RequestBody AddNodeRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "addNode";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			SparqlConnection conn = requestBody.buildConnection();
+			OntologyInfo oInfo = retrieveOInfo(query_prop.setUserAndPasswordIfMissing(conn));
+			
+			String newNodeUri = requestBody.getNewNodeUri();
+			String existingNodeSparqlId = requestBody.getExistingNodeSparqlId();
+
+			NodeGroup ng = requestBody.buildNodeGroup();
+			Node existingNode = ng.getNodeBySparqlID(existingNodeSparqlId);
+			Node newNode = ng.returnBelmontSemanticNode(newNodeUri, oInfo);
+
+			String connectionUri = requestBody.getObjectPropertyUri();
+			if (requestBody.isFromExistingToNewNode()) {
+				ng.addOneNode(newNode, existingNode, null, connectionUri );
+			} else {
+				ng.addOneNode(newNode, existingNode, connectionUri, null );
+			}
+
+
+			retval.addResult(RET_KEY_NODEGROUP, ng.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();
+	}
+
+	@Operation(
+			summary="Build default importSpec from returns in nodegroup",
+			description="Intended for use by the SPARQLgraph client.  Not too useful otherwise."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/setImportSpecFromReturns", method=RequestMethod.POST)
+	public JSONObject setImportSpecFromReturns(@RequestBody SetImportSpecRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			NodeGroup ng = sgJson.getNodeGroup();
+			ImportSpecHandler isHandler = sgJson.getImportSpecHandler();
+			ImportSpec oldSpec = isHandler == null ? new ImportSpec() : isHandler.getImportSpec();
+			ImportSpec newSpec;
+			
+			// generate the columns  OR  copy the old spec
+			if (requestBody.getAction().equals("Build from nodegroup")) {
+				newSpec = oldSpec;
+				newSpec.updateSpecFromReturns(ng);
+			} else {
+				newSpec = oldSpec;
+			}
+			
+			// add URI Lookups
+			if (!requestBody.getLookupRegex().isEmpty()) {
+				newSpec.addURILookups(ng, requestBody.getLookupRegex(), requestBody.getLookupMode());
+			}
+			
+			// copy forward any options if importSpec was sent inside sgjson
+			if (isHandler != null) {
+				newSpec.setBaseURI(oldSpec.getBaseURI());
+			}
+			
+			// return
+			sgJson.setImportSpec(newSpec);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "setImportSpecFromReturns", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Get a list of supported server types.",
+			description="return key is 'serverTypes'"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getServerTypes", method=RequestMethod.POST)
+	public JSONObject getServerTypes(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			retval.addResult("serverTypes", SparqlEndpointInterface.getServerTypes());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "getServerTypes", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Inflate a nodegroup, return validation errors.",
+			description="returns 'nodegroup' 'modelErrorMessages' and 'invalidItemStrings'"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/inflateAndValidate", method=RequestMethod.POST)
+	public JSONObject inflateAndValidate(@RequestBody NodegroupRequest ngRequest, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			SparqlGraphJson sgjson = ngRequest.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgjson);
+			SparqlConnection conn = sgjson.getSparqlConn();
+			OntologyInfo oInfo = this.retrieveOInfo(conn);
+			NodeGroup ng = sgjson.getNodeGroup();
+			ImportSpec importSpec = sgjson.getImportSpec();
+			ArrayList<String> modelErrorMessages = new ArrayList<String>();
+			ArrayList<NodeGroupItemStr> invalidNodeGroupItems = new ArrayList<NodeGroupItemStr>();
+			ArrayList<String> warnings = new ArrayList<String>();
+			
+			// do the work
+			ng.inflateAndValidate(oInfo, importSpec, modelErrorMessages, invalidNodeGroupItems, warnings);
+			
+			// translate invalid items
+			String invalidItemStrings[] = new String[invalidNodeGroupItems.size()];
+			for (int i=0; i < invalidNodeGroupItems.size(); i++) {
+				invalidItemStrings[i] = invalidNodeGroupItems.get(i).getStr();
+			}
+			
+			// build the return
+			retval.addResult("nodegroup", ng.toJson());
+			retval.addResult("modelErrorMessages", modelErrorMessages.toArray(new String[modelErrorMessages.size()]));
+			retval.addResult("invalidItemStrings", invalidItemStrings);
+			retval.addResult("warnings", warnings.toArray(new String[warnings.size()]));
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "inflateAndValidate", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Suggest a valid class URI for a node",
+			description="returns classList = array of class URI's sorted from best to worst match"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/suggestNodeClass", method=RequestMethod.POST)
+	public JSONObject suggestNodeClass(@RequestBody NodegroupItemStrRequest request, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			SparqlConnection conn = request.buildConnection();
+			OntologyInfo oInfo = retrieveOInfo(query_prop.setUserAndPasswordIfMissing(conn));
+			
+			NodeGroup ng = request.buildNodeGroup();
+			NodeGroupItemStr itemStr = new NodeGroupItemStr(request.getItemStr(), ng);
+			if (itemStr.getType() != Node.class)
+				throw new Exception("Invalid itemStr param.  Expecting a Node URI");
+				
+			ArrayList<String> classList = ValidationAssistant.suggestNodeClass(oInfo, ng, itemStr);
+			retval.addResult("classList", classList.toArray(new String[0]));
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "suggestNodeClass", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();		
+	}
+	
+	@Operation(
+			summary="Add a sample plot to a nodegroup"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/plot/addSamplePlot", method=RequestMethod.POST)
+	public JSONObject addSamplePlot(@RequestBody NodegroupPlotRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try {
+			requestBody.validate();
+			String plotType = requestBody.getPlotType(); 		// e.g. plotly
+			String plotName = requestBody.getPlotName();
+			String graphType = requestBody.getGraphType(); 		// e.g. scatter
+			String[] columnNames = requestBody.getColumnNames();
+			
+			if(!plotType.equals(PlotlyPlotSpec.TYPE)){
+				throw new Exception("Cannot add sample plot of type '" + plotType + "': only '" + PlotlyPlotSpec.TYPE + "' is supported");
+			}
+			
+			// create the plot spec
+			PlotSpec plotSpec = PlotlyPlotSpec.getSample(plotName, graphType, columnNames);
+			
+			// add it to the json
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			PlotSpecs plotSpecs = sgJson.getPlotSpecs() != null ? sgJson.getPlotSpecs() : new PlotSpecs();
+			plotSpecs.addPlotSpec(plotSpec);
+			sgJson.setPlotSpecsJson(plotSpecs.toJson());
+			
+			// build the return
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "addSamplePlot", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();	
+	}
+
+	@Operation(
+			summary="change the domain or range of a nodegroup element",
+			description="domain: if domain is a valid property, sets the range too"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/changeItemURI", method=RequestMethod.POST)
+	public JSONObject  changeItemURI(@RequestBody NodeGroupItemUriRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			// get things once in the right order
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			ImportSpec importSpec = sgJson.getImportSpec();
+			SparqlConnection conn = sgJson.getSparqlConn();
+			OntologyInfo oInfo = this.retrieveOInfo(conn);
+			NodeGroup nodegroup = sgJson.getNodeGroupNoInflateNorValidate(oInfo);
+			NodeGroupItemStr itemStr = new NodeGroupItemStr(requestBody.getItemStr(), nodegroup);
+			String newURI = requestBody.getNewURI();
+			boolean deleteFlag = ! newURI.contains("#") && newURI.contains("<") && newURI.toLowerCase().contains("delete");
+			
+			if (requestBody.isDomain()) {
+				// do the work for DOMAIN
+				if (itemStr.getType() == Node.class) {
+					nodegroup.changeItemDomain(itemStr.getSnode(), newURI);
+					String sparqlID = itemStr.getSnode().getSparqlID();
+					if (importSpec.containsNode(sparqlID)) {
+						importSpec.changeNodeDomain(sparqlID, newURI);
+					}
+					
+				} else if (itemStr.getType() == PropertyItem.class) {
+					Node node = itemStr.getSnode();
+					OntologyClass oClass = oInfo.getClass(node.getUri());
+					PropertyItem prop = itemStr.getpItem();
+					if (deleteFlag) {
+						nodegroup.deleteProperty(node, prop);
+						importSpec.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
+					} else {
+						PropertyItem newProp = nodegroup.changeItemDomain(node, prop, newURI);
+						importSpec.changePropertyDomain(node.getSparqlID(), prop.getUriRelationship(), newURI);
+						
+						// If newURI is a valid property in ontology, make sure range is correct too
+						OntologyProperty oProp = oInfo.getProperty(newURI);
+						if (oProp != null) {
+							
+							// oinfo has a function to get the XSDTypesOfAProperty
+							OntologyRange oRange = oProp.getRange(oClass, oInfo);
+							nodegroup.changeItemRange(newProp, oRange.getSimpleUri(), oInfo.getPropertyRangeXSDTypes(oRange));
+						}
+					}
+					
+				} else {
+					// nodeItem
+					Node node = itemStr.getSnode();
+					OntologyClass oClass = oInfo.getClass(node.getUri());
+					NodeItem nItem = itemStr.getnItem();
+					Node target = itemStr.getTarget();
+					
+					if (deleteFlag) {
+						nodegroup.deleteNodeItem(node, nItem);
+						// no effect on importSpec
+					} else {
+						NodeItem newNodeItem = nodegroup.changeItemDomain(node, nItem, target, newURI);
+						// no effect on importSpec
+						
+						// If newURI is a valid property in ontology, make sure range is correct too
+						OntologyProperty oProp = oInfo.getProperty(newURI);
+						if (oProp != null) {
+							nodegroup.changeItemRange(newNodeItem, oProp.getRange(oClass, oInfo).getUriList());
+						}
+					}
+					
+				}
+			} else {
+				// do the work for RANGE
+				if (itemStr.getType() == Node.class) {
+					throw new Exception("Can not change Range of a class node");
+					
+				} else if (itemStr.getType() == PropertyItem.class) {
+					nodegroup.changeItemRange(itemStr.getpItem(), newURI, oInfo.getPropertyRangeXSDTypes(newURI));
+				} else {
+					// nodeItem: parse newURI in case it is a { http://complex#complex or http://complex#range }
+					nodegroup.changeItemRange(itemStr.getnItem(), OntologyRange.parseDisplayString(newURI));
+				}
+			}
+			
+			// return
+			sgJson.setNodeGroup(nodegroup);
+			sgJson.setImportSpec(importSpec);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "changeItemURI", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	/**
+	 * Retrieve oInfo.
+	 * @param conn
+	 * @return
+	 * @throws Exception
+	 */
+	private OntologyInfo retrieveOInfo(SparqlConnection conn) throws Exception {
+		/* This option is slower
+		 * But cache is cleared when owl is loaded or model might have changed
+		 */
+		OntologyInfoClient oClient = oinfo_props.getClient();
+		return oClient.getOntologyInfo(conn);
+		
+	}
+	
+	
+	/**
+	 * Retrieve predicate stats only if already cached and ready, else null.
+	 * @param conn
+	 * @return
+	 * 
+	 * @throws Exception
+	 */
+	private PredicateStats retrievePredicateStatsIfCached(SparqlConnection conn) throws Exception {
+		OntologyInfoClient oClient = oinfo_props.getClient();
+		return oClient.execGetCachedPredicateStats(conn);
+	}
+	
+	/**
+	 * Retrieve predicate stats with no parent jobId
+	 * @param conn
+	 * @return
+	 * @throws Exception
+	 */
+	private PredicateStats retrievePredicateStats(SparqlConnection conn) throws Exception {
+		return this.retrievePredicateStats(conn, null, 0, 0);
+	}
+	
+	/**
+	 * Retrieve predicate stats
+	 * @param conn
+	 * @param parentJobId - to update.  Null to skip this feature.
+	 * @param startPercent - for parentJobId percent complete updates
+	 * @param endPercent - for parentJobId percent complete updates
+	 * @return
+	 * @throws Exception
+	 */
+	private PredicateStats retrievePredicateStats(SparqlConnection conn, String parentJobId, int startPercent, int endPercent) throws Exception {
+
+		OntologyInfoClient oClient = oinfo_props.getClient();
+		String jobId = oClient.execGetPredicateStats(conn);
+		JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+		
+		if (parentJobId != null) {
+			tracker.waitTilCompleteUpdatingParent(jobId, parentJobId, "Getting stats on predicate usage", 1000, startPercent, endPercent);
+		}
+		
+		if (tracker.jobSucceeded(jobId)) {
+			ResultsClient rclient = results_props.getClient();
+			JSONObject statsJson = rclient.execGetBlobResult(jobId);
+			return new PredicateStats(statsJson);
+		} else {
+			throw new Exception(tracker.getJobStatusMessage(jobId));
+		}
+	}
+	
+	
+	
+}

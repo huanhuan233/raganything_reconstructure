@@ -34,6 +34,11 @@ class NodeMetadata:
     config_fields: List[NodeConfigField] = field(default_factory=list)
     input_schema: Optional[Dict[str, Any]] = None
     output_schema: Optional[Dict[str, Any]] = None
+    semantic_inputs: Optional[List[str]] = None
+    semantic_outputs: Optional[List[str]] = None
+    constraint_dependencies: Optional[List[str]] = None
+    runtime_state_dependencies: Optional[List[str]] = None
+    ontology_types: Optional[List[str]] = None
 
 
 def config_field_as_dict(f: NodeConfigField) -> Dict[str, Any]:
@@ -54,6 +59,16 @@ def metadata_as_dict(m: NodeMetadata) -> Dict[str, Any]:
         out["input_schema"] = m.input_schema
     if m.output_schema is not None:
         out["output_schema"] = m.output_schema
+    if m.semantic_inputs is not None:
+        out["semantic_inputs"] = m.semantic_inputs
+    if m.semantic_outputs is not None:
+        out["semantic_outputs"] = m.semantic_outputs
+    if m.constraint_dependencies is not None:
+        out["constraint_dependencies"] = m.constraint_dependencies
+    if m.runtime_state_dependencies is not None:
+        out["runtime_state_dependencies"] = m.runtime_state_dependencies
+    if m.ontology_types is not None:
+        out["ontology_types"] = m.ontology_types
     return out
 
 

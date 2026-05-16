@@ -32,6 +32,8 @@ class NodeConfigFieldModel(BaseModel):
 class NodeMetadataModel(BaseModel):
     """节点库元数据（与 ``BaseNode.metadata()`` 序列化一致）。"""
 
+    model_config = ConfigDict(extra="ignore")
+
     node_type: str
     display_name: str
     category: str
@@ -41,6 +43,11 @@ class NodeMetadataModel(BaseModel):
     config_fields: List[NodeConfigFieldModel] = Field(default_factory=list)
     input_schema: Optional[Dict[str, Any]] = None
     output_schema: Optional[Dict[str, Any]] = None
+    semantic_inputs: Optional[List[str]] = None
+    semantic_outputs: Optional[List[str]] = None
+    constraint_dependencies: Optional[List[str]] = None
+    runtime_state_dependencies: Optional[List[str]] = None
+    ontology_types: Optional[List[str]] = None
 
 
 class NodeInfoResponse(BaseModel):
@@ -216,6 +223,9 @@ class WorkflowRunHistoryDetail(BaseModel):
     workflow_id: str = ""
     workflow_name: str = ""
     success: bool = False
+    running: bool = False
+    phase: str = ""
+    current_node_id: Optional[str] = None
     duration_ms: Optional[int] = None
     started_at: Optional[str] = None
     finished_at: Optional[str] = None
@@ -224,6 +234,8 @@ class WorkflowRunHistoryDetail(BaseModel):
     node_results: Dict[str, Any] = Field(default_factory=dict)
     logs: List[Any] = Field(default_factory=list)
     request_snapshot: Any = None
+    trace_nodes: Dict[str, Any] = Field(default_factory=dict)
+    trace_timeline: List[Any] = Field(default_factory=list)
 
 
 class ResumeCacheClearResponse(BaseModel):

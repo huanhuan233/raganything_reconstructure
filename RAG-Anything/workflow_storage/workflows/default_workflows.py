@@ -447,6 +447,154 @@ def build_default_entity_relation_extract_validation_with_industrial_workflow() 
     )
 
 
+def build_default_industrial_ontology_object_library_workflow() -> Dict[str, Any]:
+    """
+    本体对象建库默认工作流：在 industrial 图谱构建之后串联 ISR 链路（ontology / semantic plan / constraint filter / persist），
+    再接工业图谱 Neo4j 与向量存储；与 ``default-entity-relation-extract-validation-industrial`` 并行模板，不改变后者。
+    """
+    chain_before_isr = [
+        ("start", "workflow.start", "开始", {}),
+        (
+            "document_parse",
+            "document.parse",
+            "文档解析",
+            {"source_path": "Inputs/3.pdf", "parser": "mineru", "parse_method": "auto"},
+        ),
+        ("content_filter", "content.filter", "内容过滤", {"drop_empty": True, "keep_page_numbers": True}),
+        ("multimodal_process", "multimodal.process", "多模态预处理", {"use_vlm": False}),
+        ("content_route", "content.route", "内容路由", {"keep_unrouted": True, "drop_discard_types": True}),
+        (
+            "industrial_structure",
+            "industrial.structure_recognition",
+            "工业结构识别",
+            {
+                "enabled_parsers": ["title_hierarchy", "process_flow", "table_structure"],
+                "enable_validation": True,
+                "enable_semantic_completion": False,
+            },
+        ),
+        ("industrial_table", "industrial.table_parse", "工业表结构解析", {}),
+        ("industrial_constraint", "industrial.constraint_extract", "工业约束抽取", {"enable_validation": True}),
+        ("industrial_process", "industrial.process_extract", "工业流程抽取", {}),
+        (
+            "chunk_split",
+            "chunk.split",
+            "文本切片",
+            {
+                "chunk_token_size": 1200,
+                "chunk_overlap_token_size": 100,
+                "include_multimodal_descriptions": True,
+                "skip_pipelines": ["discard_pipeline"],
+            },
+        ),
+        (
+            "embedding_index",
+            "embedding.index",
+            "向量索引",
+            {"include_raw_item": True, "allow_without_vector": True, "batch_size": 16},
+        ),
+        (
+            "entity_relation_extract",
+            "entity_relation.extract",
+            "实体关系抽取",
+            {
+                "model": "default",
+                "entity_extract_max_gleaning": 1,
+                "language": "auto",
+                "include_multimodal_chunks": True,
+                "max_chunks": 50,
+                "use_llm_cache": False,
+            },
+        ),
+        (
+            "relation_merge",
+            "relation.merge",
+            "关系归并",
+            {
+                "merge_engine": "lightrag",
+                "merge_strategy": "canonical",
+                "similarity_threshold": 0.9,
+                "use_llm_summary_on_merge": False,
+            },
+        ),
+        ("industrial_graph", "industrial.graph_build", "工业图谱构建", {}),
+    ]
+    chain_isr_tail = [
+        (
+            "ontology_object_define",
+            "ontology.object.define",
+            "工业本体对象定义",
+            {
+                "ontology_type": "Part",
+                "object_id": "",
+                "label": "默认占位零件",
+                "attributes": {},
+                "source_refs": [],
+            },
+        ),
+        ("isr_constraint_extract", "constraint.extract", "语义约束抽取（ISR）", {}),
+        (
+            "isr_semantic_plan",
+            "semantic.runtime.plan",
+            "语义运行时执行计划 IR",
+            {"use_dag_topo": False},
+        ),
+        (
+            "isr_constraint_filter",
+            "constraint.runtime.filter",
+            "工业运行时约束过滤",
+            {"explain_all": False},
+        ),
+        ("ontology_graph_persist", "ontology.graph.persist", "本体对象图持久化", {"dry_run": True}),
+        ("semantic_relation_persist", "semantic.relation.persist", "语义关系持久化", {"dry_run": True}),
+        ("constraint_relation_persist", "constraint.relation.persist", "约束关系持久化", {"dry_run": True}),
+        (
+            "industrial_graph_persist",
+            "industrial.graph.persist",
+            "工业图谱持久化",
+            {
+                "graph_backend": "neo4j",
+                "namespace": "industrial_default",
+                "enable_native_labels": True,
+                "enable_typed_relationships": True,
+                "validation": True,
+                "batch_size": 100,
+                "dry_run": False,
+            },
+        ),
+        ("storage_persist", "storage.persist", "存储落盘", {}),
+        ("end", "workflow.end", "结束", {}),
+    ]
+    full_chain = chain_before_isr + chain_isr_tail
+
+    start_x = 80
+    start_y = 720
+    step_x = 200
+    nodes: List[Dict[str, Any]] = []
+    for idx, (nid, ntype, label, cfg) in enumerate(full_chain):
+        nodes.append(_mk_node(nid, ntype, start_x + idx * step_x, start_y, label, cfg))
+
+    edges: List[Tuple[str, str]] = []
+    for i in range(len(full_chain) - 1):
+        edges.append((full_chain[i][0], full_chain[i + 1][0]))
+
+    desc = (
+        "与实体关系抽取验证（工业增强）相同的解析与图谱前置；在 industrial.graph_build 之后串联 "
+        "ontology.object.define → constraint.extract → semantic.runtime.plan → constraint.runtime.filter → "
+        "ontology.graph.persist / semantic.relation.persist / constraint.relation.persist（persist 默认为 dry_run，需适配器时关闭）→ "
+        "industrial.graph.persist → storage.persist"
+    )
+    return _build_doc(
+        workflow_id="default-industrial-ontology-object-library",
+        name="本体对象建库默认工作流",
+        description=desc,
+        nodes=nodes,
+        edges=edges,
+        entry_node_ids=["start"],
+        input_data={"source_path": "Inputs/3.pdf"},
+    )
+
+
 def list_default_workflow_templates() -> List[Dict[str, str]]:
     return [
         {
@@ -484,6 +632,11 @@ def list_default_workflow_templates() -> List[Dict[str, str]]:
             "name": "实体关系抽取验证模板（工业增强）",
             "description": "基于实体关系抽取验证模板，新增 6 个工业/重排节点",
         },
+        {
+            "template_id": "default-industrial-ontology-object-library",
+            "name": "本体对象建库默认工作流",
+            "description": "工业图谱构建后串联 ontology / ISR 语义计划 / 约束过滤与三类 ontology 图谱持久化，再接 Neo4j 与存储",
+        },
     ]
 
 
@@ -502,4 +655,6 @@ def get_default_workflow_template(template_id: str) -> Dict[str, Any]:
         return build_default_entity_relation_extract_validation_workflow()
     if template_id == "default-entity-relation-extract-validation-industrial":
         return build_default_entity_relation_extract_validation_with_industrial_workflow()
+    if template_id == "default-industrial-ontology-object-library":
+        return build_default_industrial_ontology_object_library_workflow()
     raise KeyError(template_id)

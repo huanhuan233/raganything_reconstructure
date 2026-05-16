@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from adapters.runtime.env_resolution import (
+    effective_neo4j_database,
     effective_neo4j_password,
     effective_neo4j_uri,
     effective_neo4j_user,
@@ -90,8 +91,9 @@ class IndustrialNeo4jWriter(BaseIndustrialGraphWriter):
         node_count = 0
         edge_count = 0
         safe_batch = max(int(batch_size or 100), 1)
+        db = effective_neo4j_database()
         try:
-            with driver.session() as session:
+            with driver.session(database=db) as session:
                 if create_if_missing:
                     session.run(
                         "CREATE CONSTRAINT industrial_node_ns_id_unique IF NOT EXISTS "

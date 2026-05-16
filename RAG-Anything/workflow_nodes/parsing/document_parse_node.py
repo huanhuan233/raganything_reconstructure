@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 from runtime_kernel.node_runtime.base_node import BaseNode
 from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.content_access import ContentAccess
 
 
 class DocumentParseNode(BaseNode):
@@ -91,6 +93,46 @@ class DocumentParseNode(BaseNode):
                 return str(p)
         return None
 
+    @staticmethod
+    def _normalize_source_path(raw_path: str) -> str:
+        """
+        归一化 source_path，兼容工作目录拼接导致的重复项目前缀。
+        """
+        s = str(raw_path or "").strip()
+        if not s:
+            return s
+
+        project_root = Path(__file__).resolve().parents[2]
+        project_name = project_root.name
+        normalized = s.replace("\\", "/")
+        candidates: list[Path] = []
+
+        # 1) 原始路径
+        candidates.append(Path(s))
+
+        # 2) 处理 ".../RAG-Anything/RAG-Anything/..." 这类重复前缀
+        dup = f"/{project_name}/{project_name}/"
+        if dup in normalized:
+            candidates.append(Path(normalized.replace(dup, f"/{project_name}/")))
+
+        # 3) 相对路径基于项目根目录补全
+        p = Path(s)
+        if not p.is_absolute():
+            candidates.append(project_root / s)
+            prefix = f"{project_name}/"
+            if normalized.startswith(prefix):
+                candidates.append(project_root / normalized[len(prefix) :])
+
+        seen: set[str] = set()
+        for one in candidates:
+            key = str(one)
+            if key in seen:
+                continue
+            seen.add(key)
+            if one.is_file():
+                return str(one)
+        return str(candidates[0])
+
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
         from runtime_kernel.protocols.raganything_isolated import (
             load_document_adapter_class,
@@ -102,7 +144,16 @@ class DocumentParseNode(BaseNode):
         ParsedChunk = m.ParsedChunk
         ParsedDocument = m.ParsedDocument
 
-        source = self._resolve_source_path(input_data)
+        payload = dict(input_data) if isinstance(input_data, dict) else {}
+        source = str(
+            self.config.get("source_path")
+            or context.variable_pool.get("source_path")
+            or payload.get("source_path")
+            or payload.get("file_path")
+            or ""
+        ).strip() or None
+        if source:
+            source = self._normalize_source_path(source)
 
         if source:
             parser_name = str(self.config.get("parser", "mineru")).strip().lower() or "mineru"
@@ -141,14 +192,16 @@ class DocumentParseNode(BaseNode):
                     error=f"document.parse 解析失败: {exc}",
                     data={"source_path": source, "parse_status": "failed"},
                 )
+            data = {
+                "source_path": source,
+                "content_list": content_list,
+                "parsed_document": asdict(parsed_doc),
+                "parse_status": "success",
+            }
+            ContentAccess.set_parsed_document(context, self.node_id, data["parsed_document"])
             return NodeResult(
                 success=True,
-                data={
-                    "source_path": source,
-                    "content_list": content_list,
-                    "parsed_document": asdict(parsed_doc),
-                    "parse_status": "success",
-                },
+                data=data,
                 metadata={
                     "parser": parser_name,
                     "parse_method": parse_method,
@@ -179,13 +232,15 @@ class DocumentParseNode(BaseNode):
                 )
             ],
         )
+        data = {
+            "source_path": source,
+            "content_list": mock_doc.raw_content_list,
+            "parsed_document": asdict(mock_doc),
+            "parse_status": "mock_skipped",
+        }
+        ContentAccess.set_parsed_document(context, self.node_id, data["parsed_document"])
         return NodeResult(
             success=True,
-            data={
-                "source_path": source,
-                "content_list": mock_doc.raw_content_list,
-                "parsed_document": asdict(mock_doc),
-                "parse_status": "mock_skipped",
-            },
+            data=data,
             metadata={"phase": "mock"},
         )

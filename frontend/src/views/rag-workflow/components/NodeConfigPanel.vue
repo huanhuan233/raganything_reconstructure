@@ -2,6 +2,8 @@
 import { computed, ref, toRefs } from 'vue';
 import type { Node } from '@vue-flow/core';
 import type { RagNodeConfigField, RagNodeImplementationStatus, RagNodeMetadata } from '@/types/ragWorkflow';
+import { uploadRagWorkflowSource } from '@/service/api/ragWorkflow';
+import { messageFromAxios } from '../utils/apiError';
 import KnowledgeSelectConfigPanel from './KnowledgeSelectConfigPanel.vue';
 import StoragePersistConfigPanel from './StoragePersistConfigPanel.vue';
 import IndustrialConfigPanel from '../industrial/IndustrialConfigPanel.vue';
@@ -136,6 +138,9 @@ const advancedJsonActive = ref<string[]>([]);
 /** query 覆盖项默认折叠 */
 const advancedQueryActive = ref<string[]>([]);
 const advancedGraphKwActive = ref<string[]>([]);
+const pathFileInputRef = ref<HTMLInputElement | null>(null);
+const pendingPathFieldName = ref<string>('');
+const pathUploading = ref(false);
 
 const nodeImplementationStatus = computed<RagNodeImplementationStatus | null>(() => {
   const meta = props.selectedNodeMeta;
@@ -305,6 +310,37 @@ function patchKeywordCsv(
     .filter(Boolean);
   emit('patch-field', key, out);
 }
+
+function triggerPickPathFile(fieldName: string) {
+  pendingPathFieldName.value = fieldName;
+  pathFileInputRef.value?.click();
+}
+
+async function onPickedPathFile(e: Event) {
+  const input = e.target as HTMLInputElement | null;
+  const fieldName = pendingPathFieldName.value;
+  const file = input?.files?.[0];
+  if (!fieldName || !file) {
+    if (input) input.value = '';
+    return;
+  }
+  pathUploading.value = true;
+  try {
+    const resp = await uploadRagWorkflowSource(file);
+    const sourcePath = String(resp?.source_path || '').trim();
+    if (!sourcePath) {
+      throw new Error('上传成功但未返回 source_path');
+    }
+    emit('patch-field', fieldName, sourcePath);
+    window.$message?.success('文件已上传并填充 source_path');
+  } catch (err) {
+    window.$message?.error(messageFromAxios(err));
+  } finally {
+    pathUploading.value = false;
+    pendingPathFieldName.value = '';
+    if (input) input.value = '';
+  }
+}
 </script>
 
 <template>
@@ -388,7 +424,14 @@ function patchKeywordCsv(
                     :model-value="schemaStrValue(f, localSchemaConfig)"
                     @update:model-value="v => emit('patch-field', f.name, v)"
                   />
-                  <ElButton size="small" class="rag-wf-path-pick" disabled>选择</ElButton>
+                  <ElButton
+                    size="small"
+                    class="rag-wf-path-pick"
+                    :loading="pathUploading"
+                    @click="triggerPickPathFile(f.name)"
+                  >
+                    选择并上传
+                  </ElButton>
                 </div>
                 <ElInput
                   v-else-if="f.type === 'string'"
@@ -575,6 +618,7 @@ function patchKeywordCsv(
         </template>
       </template>
     </div>
+    <input ref="pathFileInputRef" type="file" style="display: none" @change="onPickedPathFile" />
   </div>
 </template>
 

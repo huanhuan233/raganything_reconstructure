@@ -1,0 +1,598 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:card="http://Cardinality#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <owl:Ontology rdf:about="http://Cardinality">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'Cardinality.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://Cardinality#Cardinal">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#range12Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#atLeast1Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#exactly1Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >2</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#range12Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#atMost1Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#atLeast1Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#singleData"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#range12Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#exactly1Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#atMost1Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass>
+          <owl:Class rdf:about="http://Cardinality#Value"/>
+        </owl:onClass>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#singleObject"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >2</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#range12Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://Cardinality#RestrictTheUnrestricted">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#range12Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#exactly1Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#exactly1Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#range12Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#atLeast1Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#atLeast1Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >2</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#range12Data"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >2</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinality#range12Object"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://Cardinality#SubCardinal">
+    <rdfs:subClassOf rdf:resource="http://Cardinality#Cardinal"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="http://Cardinality#singleObject">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinality#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinality#atMost1Object">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinality#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinality#exactly1Object">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinality#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinality#anyObject">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinality#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinality#atLeast1Object">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinality#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinality#range12Object">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinality#Value"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#range12Data">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#exactly1Data">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#anyData">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#atMost1Data">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#singleData">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#atLeast1Data">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinality#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinality#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <card:Cardinal rdf:about="http://Cardinality#card1">
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <card:anyObject>
+      <card:Value rdf:about="http://Cardinality#val1"/>
+    </card:anyObject>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <rdfs:comment xml:lang="en">instance with one of each property</rdfs:comment>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+  </card:Cardinal>
+  <card:UnrestrictedCardinal rdf:about="http://Cardinality#unrest1">
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <rdfs:comment xml:lang="en">instance with one of each property</rdfs:comment>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+  </card:UnrestrictedCardinal>
+  <card:RestrictTheUnrestricted rdf:about="http://Cardinality#rtu0">
+    <rdfs:comment xml:lang="en">instance with no properties</rdfs:comment>
+  </card:RestrictTheUnrestricted>
+  <card:Cardinal rdf:about="http://Cardinality#card2">
+    <card:singleObject>
+      <card:Value rdf:about="http://Cardinality#val2"/>
+    </card:singleObject>
+    <card:exactly1Object rdf:resource="http://Cardinality#val2"/>
+    <card:anyObject rdf:resource="http://Cardinality#val2"/>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:range12Data>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atMost1Data>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val2"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:atMost1Object rdf:resource="http://Cardinality#val2"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:anyData>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:exactly1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val2"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:singleData>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atLeast1Data>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+    <rdfs:comment xml:lang="en">instance with two of each property</rdfs:comment>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+  </card:Cardinal>
+  <card:UnrestrictedCardinal rdf:about="http://Cardinality#unrest0">
+    <rdfs:comment xml:lang="en">instance with no properties</rdfs:comment>
+  </card:UnrestrictedCardinal>
+  <card:SubCardinal rdf:about="http://Cardinality#sub0">
+    <rdfs:comment xml:lang="en">instance with no properties</rdfs:comment>
+  </card:SubCardinal>
+  <card:RestrictTheUnrestricted rdf:about="http://Cardinality#rtu1">
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <rdfs:comment xml:lang="en">instance with one of each property</rdfs:comment>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+  </card:RestrictTheUnrestricted>
+  <card:SubCardinal rdf:about="http://Cardinality#sub1">
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <rdfs:comment xml:lang="en">instance with one of each property</rdfs:comment>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+  </card:SubCardinal>
+  <card:RestrictTheUnrestricted rdf:about="http://Cardinality#rtu2">
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atLeast1Data>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <rdfs:comment xml:lang="en">instance with two of each property</rdfs:comment>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:exactly1Object rdf:resource="http://Cardinality#val2"/>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:singleObject rdf:resource="http://Cardinality#val2"/>
+    <card:anyObject rdf:resource="http://Cardinality#val2"/>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:range12Data>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atMost1Data>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:singleData>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:exactly1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val2"/>
+    <card:atMost1Object rdf:resource="http://Cardinality#val2"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:anyData>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val2"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+  </card:RestrictTheUnrestricted>
+  <card:Cardinal rdf:about="http://Cardinality#card0">
+    <rdfs:comment xml:lang="en">instance with no properties</rdfs:comment>
+  </card:Cardinal>
+  <card:SubCardinal rdf:about="http://Cardinality#sub2">
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:singleData>
+    <card:anyObject rdf:resource="http://Cardinality#val2"/>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <card:atMost1Object rdf:resource="http://Cardinality#val2"/>
+    <rdfs:comment xml:lang="en">instance with two of each property</rdfs:comment>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:range12Data>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:exactly1Data>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atMost1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val2"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val2"/>
+    <card:exactly1Object rdf:resource="http://Cardinality#val2"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:singleObject rdf:resource="http://Cardinality#val2"/>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:anyData>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atLeast1Data>
+  </card:SubCardinal>
+  <card:UnrestrictedCardinal rdf:about="http://Cardinality#unrest2">
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atLeast1Data>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atMost1Data>
+    <card:exactly1Object rdf:resource="http://Cardinality#val1"/>
+    <card:singleObject rdf:resource="http://Cardinality#val2"/>
+    <card:anyObject rdf:resource="http://Cardinality#val1"/>
+    <rdfs:comment xml:lang="en">instance with two of each property</rdfs:comment>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:anyData>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:singleData>
+    <card:atLeast1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:atLeast1Data>
+    <card:atMost1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:atMost1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val2"/>
+    <card:atMost1Object rdf:resource="http://Cardinality#val1"/>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:exactly1Data>
+    <card:range12Object rdf:resource="http://Cardinality#val1"/>
+    <card:singleObject rdf:resource="http://Cardinality#val1"/>
+    <card:anyObject rdf:resource="http://Cardinality#val2"/>
+    <card:exactly1Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:exactly1Data>
+    <card:anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:anyData>
+    <card:exactly1Object rdf:resource="http://Cardinality#val2"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:range12Data>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val1"/>
+    <card:range12Data rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:range12Data>
+    <card:atMost1Object rdf:resource="http://Cardinality#val2"/>
+    <card:atLeast1Object rdf:resource="http://Cardinality#val2"/>
+    <card:singleData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:singleData>
+  </card:UnrestrictedCardinal>
+</rdf:RDF>

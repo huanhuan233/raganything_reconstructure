@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios';
 import { ref } from 'vue';
-import { fetchRagWorkflowRun } from '@/service/api';
-import type { RagWorkflowRunPayload, RagWorkflowRunResult } from '@/types/ragWorkflow';
+import { fetchRagWorkflowRun, fetchRagWorkflowRunDetail } from '@/service/api';
+import type { RagRunHistoryDetail, RagWorkflowRunPayload, RagWorkflowRunResult } from '@/types/ragWorkflow';
 import { formatFastApiDetail } from '../utils/apiError';
 import { stringifyPretty } from '../utils/jsonHelper';
 import { safeParseJson5 } from '../utils/jsonHelper';
@@ -22,7 +22,26 @@ export function useWorkflowRun(options: {
     return stringifyPretty(res);
   }
 
-  async function runWorkflow(payload: RagWorkflowRunPayload, inputJsonText: string): Promise<RagWorkflowRunResult | null> {
+  /** 以服务端落盘记录为准刷新「上次运行」展示（修正 HTTP 断连/响应截断导致的 UI 偏差）。 */
+  async function syncRunStateFromServer(runId: string): Promise<RagRunHistoryDetail | null> {
+    const rid = runId.trim();
+    if (!rid) return null;
+    try {
+      const detail = await fetchRagWorkflowRunDetail(rid);
+      lastRunRaw.value = stringifyPretty(detail);
+      runStatus.value = detail.success ? 'success' : detail.running ? 'running' : 'error';
+      runErrorMsg.value = detail.error || '';
+      return detail;
+    } catch {
+      return null;
+    }
+  }
+
+  async function runWorkflow(
+    payload: RagWorkflowRunPayload,
+    inputJsonText: string,
+    reconcileRunId?: string
+  ): Promise<RagWorkflowRunResult | null> {
     runErrorMsg.value = '';
     const rawIn = inputJsonText.trim();
     if (rawIn && safeParseJson5(inputJsonText) === null) {
@@ -36,6 +55,8 @@ export function useWorkflowRun(options: {
     lastRunRaw.value = '';
     runStatus.value = 'running';
 
+    const fallbackId = (reconcileRunId || payload.run_id || '').trim();
+
     try {
       const res = await fetchRagWorkflowRun(payload);
       lastRunRaw.value = formatRun(res);
@@ -45,6 +66,13 @@ export function useWorkflowRun(options: {
       const ax = e as AxiosError<{ detail?: unknown }>;
       runErrorMsg.value = formatFastApiDetail(ax.response?.data?.detail) || ax.message || String(e);
       runStatus.value = 'error';
+      if (fallbackId) {
+        const recovered = await syncRunStateFromServer(fallbackId);
+        if (recovered) {
+          window.$message?.warning('运行请求已中断，已从服务端运行记录恢复展示（与 run_id 同步）');
+          return null;
+        }
+      }
       window.$message?.error(runErrorMsg.value);
       lastRunRaw.value = '';
       return null;
@@ -250,6 +278,7 @@ export function useWorkflowRun(options: {
     runStatus,
     runWorkflow,
     formatRun,
+    syncRunStateFromServer,
     runAnswerSnippet
   };
 }

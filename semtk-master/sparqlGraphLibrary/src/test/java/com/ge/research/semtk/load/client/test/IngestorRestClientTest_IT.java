@@ -1,0 +1,132 @@
+/**
+ ** Copyright 2016 General Electric Company
+ **
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
+
+package com.ge.research.semtk.load.client.test;
+
+import static org.junit.Assert.*;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import org.json.simple.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.ge.research.semtk.load.client.IngestorClientConfig;
+import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.resultSet.TableResultSet;
+
+
+public class IngestorRestClientTest_IT {
+	
+	private static IngestorRestClient ingestClient = null;
+	private static final String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
+	
+	private static SparqlGraphJson sgJson_TestGraph;
+	private static String sgJsonString_TestGraph;
+
+	private static String otherDataset;
+	
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+		String serviceProtocol = IntegrationTestUtility.get("protocol");
+		String ingestionServiceServer = IntegrationTestUtility.get("ingestionservice.server");
+		int ingestionServicePort = IntegrationTestUtility.getInt("ingestionservice.port");
+		ingestClient   = new IngestorRestClient(new IngestorClientConfig(serviceProtocol, ingestionServiceServer, ingestionServicePort));
+
+		sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromResource(IngestorRestClientTest_IT.class, "/testTransforms.json");
+		sgJsonString_TestGraph = sgJson_TestGraph.getJson().toJSONString();   // template as a string
+	}
+
+	@AfterClass
+	public static void cleanup() throws Exception {
+		IntegrationTestUtility.clearGraph(TestGraph.getSei(otherDataset));
+	}
+	
+	
+	/**
+	 * Test ingesting data.
+	 */
+	@Test
+	public void testIngest() throws Exception{				
+		
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
+		
+		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+		ingestClient.execIngestionFromCsv(sgJsonString_TestGraph, DATA);	// load data
+		assertTrue(ingestClient.getLastResult().getRationaleAsString("\n"), ingestClient.getLastResultSuccess());
+		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+	}
+	
+	/**
+	 * Test ingesting data with overriding the SPARQL connection.
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testIngestWithConnectionOverride() throws Exception{
+		
+		// clear the test graph (will confirm later that data isn't loaded here)
+		TestGraph.clearGraph();
+
+		// get an override SPARQL connection, by getting the TestGraph dataset and appending "OTHER"
+		// TODO could not find a clean way to add this functionality to TestGraph for reusability - maybe in the future
+		JSONObject sparqlConnJson = sgJson_TestGraph.getSparqlConn().toJson();  // original TestGraph sparql conn 
+				
+		SparqlConnection sparqlConnectionOverride = new SparqlConnection(sparqlConnJson.toJSONString()); // get the connection object
+		otherDataset = sparqlConnectionOverride.getDefaultQueryInterface().getGraph() + "OTHER";
+		sparqlConnectionOverride.getDataInterface(0).setGraph(otherDataset);
+		sparqlConnectionOverride.getModelInterface(0).setGraph(otherDataset);
+		
+		// clear the override graph and upload OWL to it (else the test load will fail)
+		SparqlEndpointInterface seiOverride = TestGraph.getSei();
+		seiOverride.setDataset(otherDataset);
+		seiOverride.clearGraph();
+		seiOverride.executeAuthUploadOwl(Files.readAllBytes(Paths.get("src/test/resources/testTransforms.owl")));
+		
+		// get count of triples in override graph (after OWL load, but before data load)
+		String sparql = SparqlToXUtils.generateCountTriplesSparql(seiOverride);
+		JSONObject resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
+		Table table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
+		assertEquals("123", table.getCell(0,0));	// confirm that data was loaded to the override graph
+		
+		// load the data
+		ingestClient.execIngestionFromCsv(sgJsonString_TestGraph, DATA, sparqlConnectionOverride.toString());
+		assertTrue(ingestClient.getLastResult().getRationaleAsString("\n"), ingestClient.getLastResultSuccess());
+
+		// confirm 0 triples loaded to test graph
+		assertEquals(TestGraph.getNumTriples(),0);	
+		
+		// confirm triples loaded to override graph
+		sparql = SparqlToXUtils.generateCountTriplesSparql(seiOverride);
+		resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
+		table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
+		assertEquals("131", table.getCell(0,0));	// confirm that data was loaded to the override graph
+	}
+	
+}

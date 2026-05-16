@@ -7,6 +7,7 @@ import type {
   RagRunHistoryListResponse,
   RagRuntimeTraceNodeDetail,
   RagRuntimeTraceSnapshot,
+  RagWorkflowSourceUploadResult,
   RagWorkflowListResponse,
   RagWorkflowRunPayload,
   RagWorkflowRunResult,
@@ -21,7 +22,8 @@ export function fetchRagNodeTypes() {
   return ragWorkflowRequest<RagNodeTypesResponse>({
     url: '/api/nodes',
     method: 'get',
-    timeout: 30000
+    // 首屏可能与超大运行记录恢复并行；后端若被同步 JSON 短暂阻塞，避免 30s 误判失败
+    timeout: 0
   });
 }
 
@@ -34,6 +36,44 @@ export function fetchRagWorkflowRun(payload: RagWorkflowRunPayload) {
     // 等待后端完成，不因前端超时提前失败（仅以后端真实结果为准）
     timeout: 0
   });
+}
+
+/** 上传本地源文件并返回可用 source_path。 */
+export async function uploadRagWorkflowSource(file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  const path = '/api/workflows/upload-source';
+  let url = path;
+  if (import.meta.env.DEV) {
+    url = `/proxy-rag${path}`;
+  } else {
+    let ragBase = '';
+    try {
+      const raw = String(import.meta.env.VITE_OTHER_SERVICE_BASE_URL || '{}');
+      const parsed = json5.parse(raw) as { rag?: string };
+      ragBase = String(parsed.rag || '');
+    } catch {
+      ragBase = '';
+    }
+    const base = ragBase || String(import.meta.env.VITE_SERVICE_BASE_URL || '');
+    url = `${base}${path}`;
+  }
+  const resp = await fetch(url, {
+    method: 'POST',
+    body: form
+  });
+  if (!resp.ok) {
+    let detail = '';
+    try {
+      const err = (await resp.json()) as { detail?: unknown };
+      if (typeof err?.detail === 'string') detail = err.detail;
+      else if (err?.detail !== undefined) detail = JSON.stringify(err.detail);
+    } catch {
+      detail = '';
+    }
+    throw new Error(detail || `上传失败(${resp.status})`);
+  }
+  return (await resp.json()) as RagWorkflowSourceUploadResult;
 }
 
 /** 保存画布到服务端 ``POST /api/workflows/save``。 */
@@ -91,7 +131,8 @@ export function fetchRagWorkflowRuns(workflowId?: string) {
 export function fetchRagWorkflowRunDetail(runId: string) {
   return ragWorkflowRequest<RagRunHistoryDetail>({
     url: `/api/workflows/runs/${encodeURIComponent(runId)}`,
-    method: 'get'
+    method: 'get',
+    timeout: 0
   });
 }
 

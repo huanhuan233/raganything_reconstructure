@@ -22,7 +22,7 @@
         "pages_per_split": 2,
         "doc_id": null,
         "mock_text": "模拟解析得到的正文片段。",
-        "source_path": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything重构\\RAG-Anything\\Inputs\\崔本城毕设.png"
+        "source_path": "D:\\科研i项目\\多模态RAG\\源码\\raganything\\raganything重构\\RAG-Anything\\Inputs\\uploaded\\HB_Z_223.3-2003_3_1977d500.pdf"
       },
       "position": {
         "x": 364,
@@ -50,25 +50,26 @@
         "use_vlm": true,
         "vlm_model": "Qwen/Qwen3.6-35B-A3B",
         "vlm_prompt": "请描述该图片、表格或视觉区域中的关键信息，用于后续RAG检索。",
-        "max_visual_items": 50,
+        "max_visual_items": 100,
         "process_types": [
           "chart",
           "equation",
           "figure",
-          "footer",
           "formula",
           "formula_caption",
           "formula_label",
           "image",
           "image_caption",
           "inline_formula",
-          "page_number",
           "seal",
           "sheet",
           "table",
           "table_caption",
-          "table_footnote"
-        ]
+          "table_footnote",
+          "algorithm"
+        ],
+        "resume_from_cache": true,
+        "resume_cache_key": ""
       },
       "position": {
         "x": 924,
@@ -151,7 +152,7 @@
       "type": "chunk.split",
       "config": {
         "chunk_token_size": 5000,
-        "chunk_overlap_token_size": 100,
+        "chunk_overlap_token_size": 200,
         "include_multimodal_descriptions": true,
         "skip_pipelines": [
           "discard_pipeline"
@@ -187,7 +188,7 @@
         "entity_extract_max_gleaning": 1,
         "language": "auto",
         "include_multimodal_chunks": true,
-        "max_chunks": 50,
+        "max_chunks": 200,
         "use_llm_cache": false
       },
       "position": {
@@ -228,7 +229,7 @@
         "vector_storage": {
           "backend": "milvus",
           "mode": "create",
-          "collection": "ceshi02",
+          "collection": "ceshi04",
           "dimension": 4096,
           "metric_type": "COSINE",
           "index_type": "IVF_FLAT",
@@ -263,11 +264,11 @@
         "batch_size": 100,
         "dry_run": false,
         "create_if_missing": true,
-        "namespace": "ceshi02"
+        "namespace": "ceshi04"
       },
       "position": {
-        "x": 3962,
-        "y": 98
+        "x": 4004,
+        "y": 196
       },
       "label": "工业图谱持久化"
     }
@@ -345,5 +346,5 @@
     "source_path": "Inputs/3.pdf"
   },
   "created_at": "2026-05-14T08:16:01Z",
-  "updated_at": "2026-05-15T08:19:50Z"
+  "updated_at": "2026-05-15T12:52:42Z"
 }

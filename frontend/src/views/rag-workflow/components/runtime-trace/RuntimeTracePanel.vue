@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
+import SemanticRuntimePanel from '@/components/runtime/SemanticRuntimePanel.vue';
+import RuntimeTimeline from '@/components/runtime/RuntimeTimeline.vue';
+import type { RagRunHistoryDetail } from '@/types/ragWorkflow';
+import { mergeSemanticObservatoryFromRun } from '@/components/runtime/useSemanticObservatory';
 import RuntimeTraceDetail from './RuntimeTraceDetail.vue';
 import RuntimeTraceInput from './RuntimeTraceInput.vue';
 import RuntimeTraceNodeCard from './RuntimeTraceNodeCard.vue';
@@ -13,7 +17,18 @@ const props = defineProps<{
   state: RuntimeTraceState;
   orderedNodes: RuntimeTraceState['nodes'];
   embedded?: boolean;
+  runDetail?: RagRunHistoryDetail | null;
+  importFallbackRecord?: Record<string, unknown> | null;
 }>();
+
+const observatorySnap = computed(() =>
+  mergeSemanticObservatoryFromRun(
+    (props.runDetail ?? props.importFallbackRecord ?? null) as RagRunHistoryDetail | null,
+    { liveTraceTimeline: props.state.timeline }
+  )
+);
+
+const semanticTraceTimeline = computed(() => observatorySnap.value?.timeline ?? []);
 
 const emit = defineEmits<{
   'update-width': [width: number];
@@ -105,7 +120,7 @@ const selectedTab = computed<RuntimeTraceTabKey>({
     <div v-if="!embedded" class="runtime-trace-panel__resize" @mousedown.prevent="beginResize"></div>
     <div class="runtime-trace-panel__header">
       <div class="runtime-trace-panel__title">
-        Runtime Trace
+        Industrial Semantic Trace
         <span v-if="state.running" class="runtime-trace-panel__running">运行中</span>
       </div>
       <div class="runtime-trace-panel__actions">
@@ -159,7 +174,13 @@ const selectedTab = computed<RuntimeTraceTabKey>({
           <RuntimeTraceInput v-if="selectedTab === 'input'" :detail="state.selectedNodeDetail" />
           <RuntimeTraceOutput v-else-if="selectedTab === 'output'" :detail="state.selectedNodeDetail" />
           <RuntimeTraceDetail v-else-if="selectedTab === 'detail'" :detail="state.selectedNodeDetail" />
-          <RuntimeTraceTimeline v-else :nodes="orderedNodes" :timeline="state.timeline" />
+          <SemanticRuntimePanel v-else-if="selectedTab === 'observatory'" :snapshot="observatorySnap" />
+          <div v-else class="runtime-trace-panel__trace-stack">
+            <div class="runtime-trace-panel__trace-subttl">生命周期 Semantic lifecycle</div>
+            <RuntimeTimeline :events="semanticTraceTimeline" />
+            <div class="runtime-trace-panel__trace-subttl runtime-trace-panel__trace-subttl--muted">节点耗时</div>
+            <RuntimeTraceTimeline :nodes="orderedNodes" :timeline="state.timeline" />
+          </div>
         </div>
       </div>
     </template>
@@ -281,8 +302,25 @@ const selectedTab = computed<RuntimeTraceTabKey>({
 
 .runtime-trace-panel__detail-body {
   min-height: 120px;
-  max-height: 300px;
+  max-height: min(440px, 48vh);
   overflow: auto;
+}
+
+.runtime-trace-panel__trace-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.runtime-trace-panel__trace-subttl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.runtime-trace-panel__trace-subttl--muted {
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
 }
 
 .runtime-trace-panel__file-input {

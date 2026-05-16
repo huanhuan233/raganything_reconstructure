@@ -21,12 +21,15 @@ const props = withDefaults(
     runDetailLoading: boolean;
     runDetailFull: RagRunHistoryDetail | null;
     prettyJson: (v: unknown) => string;
+    /** Trace 面板上传导入的 JSON：与列表详情的 ``runDetailFull`` 互为回退数据源 */
+    traceImportFallback?: Record<string, unknown> | null;
     traceState?: RuntimeTraceState;
     traceOrderedNodes?: RuntimeTraceState['nodes'];
   }>(),
   {
     traceState: undefined,
-    traceOrderedNodes: () => []
+    traceOrderedNodes: () => [],
+    traceImportFallback: null
   }
 );
 
@@ -164,6 +167,8 @@ function toggleSameTab(tab: 'json' | 'run' | 'node_output' | 'history') {
           embedded
           :state="props.traceState || fallbackTraceState"
           :ordered-nodes="props.traceOrderedNodes || []"
+          :run-detail="runDetailFull"
+          :import-fallback-record="props.traceImportFallback"
           @update-width="emit('trace-update-width', $event)"
           @update-collapsed="emit('trace-update-collapsed', $event)"
           @select-node="emit('trace-select-node', $event)"

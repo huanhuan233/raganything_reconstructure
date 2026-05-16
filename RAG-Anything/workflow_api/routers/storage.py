@@ -14,6 +14,7 @@ from adapters.neo4j.neo4j_admin import (
     ensure_neo4j_graph_partition,
     list_neo4j_databases,
 )
+from adapters.runtime.env_resolution import effective_neo4j_database
 
 router = APIRouter(prefix="/storage", tags=["storage"])
 
@@ -32,8 +33,14 @@ class Neo4jCreateBody(BaseModel):
 
 
 class Neo4jGraphPartitionBody(BaseModel):
-    database: str = Field(default="neo4j", description="目标 Neo4j database（默认 neo4j）")
-    partition: str = Field(..., description="图分区标识，写入 RuntimeRecord.graph_partition")
+    database: str | None = Field(
+        default=None,
+        description=(
+            "Neo4j database；留空则读 NEO4J_DATABASE（未设为 neo4j），"
+            "与 /knowledge/discover、工业图谱落库对齐。"
+        ),
+    )
+    partition: str = Field(..., description="图分区标识；写入占位书签与 RuntimeRecord.graph_partition")
     auto_create_constraints: bool = Field(
         default=True,
         description="是否尝试创建 graph_partition 索引与 (record_id, graph_partition) 唯一约束（失败则忽略）",
@@ -89,14 +96,17 @@ def post_neo4j_database(body: Neo4jCreateBody) -> dict[str, Any]:
 @router.post("/neo4j/graph-partitions/")
 def post_neo4j_graph_partition(body: Neo4jGraphPartitionBody) -> dict[str, Any]:
     """同一 database 内声明图分区（不执行 CREATE DATABASE），供 Community / 单库部署使用。"""
+    resolved_db = (
+        body.database.strip() if isinstance(body.database, str) and body.database.strip() else effective_neo4j_database()
+    )
     ok, err = ensure_neo4j_graph_partition(
-        body.database.strip() or "neo4j",
+        resolved_db,
         body.partition.strip(),
         auto_create_constraints=body.auto_create_constraints,
     )
     if not ok:
         return _fail(err or "预检失败")
-    return _ok({"database": (body.database.strip() or "neo4j"), "partition": body.partition.strip()})
+    return _ok({"database": resolved_db, "partition": body.partition.strip()})
 
 
 @router.get("/embedding-dim/")

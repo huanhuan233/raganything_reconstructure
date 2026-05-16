@@ -7,7 +7,8 @@ const tabs: Array<{ key: RuntimeTraceTabKey; label: string }> = [
   { key: 'input', label: '输入' },
   { key: 'output', label: '输出' },
   { key: 'detail', label: '详情' },
-  { key: 'trace', label: 'Trace' }
+  { key: 'observatory', label: '观测台' },
+  { key: 'trace', label: '语义 Trace' }
 ];
 </script>
 

@@ -29,6 +29,12 @@ export interface RagNodeMetadata {
   config_fields: RagNodeConfigField[];
   input_schema?: Record<string, unknown> | null;
   output_schema?: Record<string, unknown> | null;
+  /** Industrial Semantic Runtime：API nodes 语义元数据（仅 UI，可不落 save 载荷扁平字段） */
+  semantic_inputs?: string[] | null;
+  semantic_outputs?: string[] | null;
+  constraint_dependencies?: string[] | null;
+  runtime_state_dependencies?: string[] | null;
+  ontology_types?: string[] | null;
 }
 
 /** GET /api/nodes */
@@ -227,6 +233,12 @@ export interface RagRuntimeTraceEvent {
   payload: Record<string, unknown>;
 }
 
+export interface RagWorkflowSourceUploadResult {
+  filename: string;
+  saved_name: string;
+  source_path: string;
+}
+
 /**
  * Vue Flow 节点 ``data`` 载荷（与画布节点 id 分离；后端 id 使用 node.id）
  */
@@ -241,4 +253,10 @@ export interface RagFlowNodeData extends Record<string, unknown> {
   isPlaceholder?: boolean;
   /** 画布 UI：实现状态，驱动 badge（real / partial / placeholder） */
   implementationStatus?: RagNodeImplementationStatus;
+  /** ISR：由节点类型元数据同步到画布卡片（camelCase） */
+  semanticInputs?: string[];
+  semanticOutputs?: string[];
+  constraintDependencies?: string[];
+  runtimeStateDependencies?: string[];
+  ontologyTypes?: string[];
 }

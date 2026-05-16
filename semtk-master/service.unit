@@ -1,0 +1,14 @@
+[Unit]
+Description=${SERVICE}
+After=configSemTK.service fuseki.service virtuoso.service ontologyInfoService.service
+
+[Service]
+User=${USER}
+WorkingDirectory=${PWD}
+EnvironmentFile=-${OLDPWD}/environment
+ExecStart=/usr/bin/java org.springframework.boot.loader.JarLauncher
+Restart=on-abort
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

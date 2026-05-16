@@ -1,4 +1,4 @@
-import { computed, reactive } from 'vue';
+import { computed, reactive, shallowRef } from 'vue';
 import type {
   RuntimeTraceEvent,
   RuntimeTraceNodeCatalogItem,
@@ -34,11 +34,13 @@ export function useRuntimeTraceStore() {
   const state = reactive<RuntimeTraceState>(createInitialState());
   const service = new RuntimeTraceService();
   let importedRunRecord: Record<string, unknown> | null = null;
+  const lastImportedRunRecordRef = shallowRef<Record<string, unknown> | null>(null);
 
   function clear() {
     Object.assign(state, createInitialState());
     service.close();
     importedRunRecord = null;
+    lastImportedRunRecordRef.value = null;
   }
 
   function setPanelWidth(width: number) {
@@ -153,6 +155,7 @@ export function useRuntimeTraceStore() {
     if (!runId) return false;
 
     importedRunRecord = record;
+    lastImportedRunRecordRef.value = record;
     service.close();
 
     state.runId = runId;
@@ -263,9 +266,15 @@ export function useRuntimeTraceStore() {
       return;
     }
 
-    // 当前 run 的 trace 中不存在该节点时，不请求详情，避免无意义 404 噪音。
     const inCurrentTrace = state.nodes.some(one => one.node_id === state.selectedNodeId);
-    if (!inCurrentTrace) {
+    const nr =
+      importedRunRecord && typeof importedRunRecord === 'object'
+        ? (importedRunRecord as Record<string, unknown>).node_results
+        : null;
+    const inImported =
+      nr && typeof nr === 'object' && !Array.isArray(nr) && state.selectedNodeId in (nr as Record<string, unknown>);
+
+    if (!inCurrentTrace && !inImported) {
       state.selectedNodeDetail = null;
       return;
     }
@@ -278,6 +287,7 @@ export function useRuntimeTraceStore() {
   async function startTracking(runId: string, nodeCatalog: RuntimeTraceNodeCatalogItem[]) {
     if (!runId) return;
     importedRunRecord = null;
+    lastImportedRunRecordRef.value = null;
     state.runId = runId;
     setNodeCatalog(nodeCatalog);
     service.subscribeSSE(runId, {
@@ -310,6 +320,7 @@ export function useRuntimeTraceStore() {
   return {
     state,
     orderedNodes,
+    lastImportedRunRecord: lastImportedRunRecordRef,
     clear,
     setPanelWidth,
     setCollapsed,

@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ge.research.semtk</groupId>
+		<artifactId>semtk-oss</artifactId>
+		<version>2.5.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>standaloneExecutables</artifactId>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>com.ge.research.semtk</groupId>
+			<artifactId>sparqlGraphLibrary</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+	</dependencies>
+
+	<!-- create runnable ("fat") jars with dependencies included -->
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+
+					<!-- java -cp path/to/standaloneExecutables-jar-with-dependencies.jar com.research.full.mainClass arg1 arg2 ... -->
+					<execution>
+						<id>standalone</id>
+						<configuration>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<finalName>standaloneExecutables</finalName>
+							<fileMode>0777</fileMode>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

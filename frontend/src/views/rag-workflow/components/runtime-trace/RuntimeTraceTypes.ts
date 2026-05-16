@@ -5,7 +5,7 @@ import type {
   RagRuntimeTraceSnapshot
 } from '@/types/ragWorkflow';
 
-export type RuntimeTraceTabKey = 'input' | 'output' | 'detail' | 'trace';
+export type RuntimeTraceTabKey = 'input' | 'output' | 'detail' | 'observatory' | 'trace';
 
 export type RuntimeTraceNodeStatus = RagRuntimeTraceNodeState['status'];
 

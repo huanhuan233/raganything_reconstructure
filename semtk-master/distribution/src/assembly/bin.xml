@@ -1,0 +1,45 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+  <id>dist</id>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+        <fileSet>
+            <directory>../</directory>
+            <outputDirectory>semtk-opensource/</outputDirectory>
+            <includes>
+                <include>*/target/**/*.jar</include>
+                <include>**/pom.xml</include>               <!-- needed to run mvn tests -->
+                <include>*/target/classes/**</include>      <!-- needed to run mvn tests -->
+                <include>*/target/test-classes/**</include> <!-- needed to run mvn tests -->
+                <include>*/src/test/resources/**</include>  <!-- needed to run mvn tests -->
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>../sparqlGraphWeb/</directory>
+            <outputDirectory>semtk-opensource/sparqlGraphWeb/</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>../</directory>
+            <outputDirectory>semtk-opensource/</outputDirectory>
+            <includes>
+                <include>.env</include>
+                <include>.fun</include>
+                <include>configSemTK.service</include>
+                <include>configSemTK.sh</include>
+                <include>configWebapps.sh</include>
+                <include>service.unit</include>
+                <include>startServices.sh</include>
+                <include>stopServices.sh</include>
+                <include>updateWebapps.sh</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>

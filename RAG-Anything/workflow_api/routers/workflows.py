@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
+import re
+import shutil
+import uuid
+from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
 
 from .. import run_store
 from .. import workflow_store
@@ -30,6 +35,23 @@ from ..schemas import (
 router = APIRouter(tags=["workflows"])
 
 
+def _safe_filename(name: str) -> str:
+    raw = str(name or "").strip()
+    if not raw:
+        return f"upload_{uuid.uuid4().hex[:8]}.bin"
+    raw = Path(raw).name
+    stem = Path(raw).stem
+    suffix = Path(raw).suffix
+    # MinerU 在 Windows 下对中文/特殊字符路径兼容性较差，统一收敛为 ASCII 名称。
+    safe_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", stem).strip("._-")
+    if not safe_stem:
+        safe_stem = "upload"
+    safe_suffix = re.sub(r"[^A-Za-z0-9.]+", "", suffix)
+    if not safe_suffix.startswith("."):
+        safe_suffix = f".{safe_suffix}" if safe_suffix else ""
+    return f"{safe_stem}{safe_suffix}"
+
+
 @router.post("/workflows/run", response_model=WorkflowRunResponse)
 async def run_workflow_endpoint(body: WorkflowRunRequest) -> WorkflowRunResponse:
     """
@@ -41,6 +63,40 @@ async def run_workflow_endpoint(body: WorkflowRunRequest) -> WorkflowRunResponse
         return await run_workflow(body)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/workflows/upload-source")
+async def upload_workflow_source(file: UploadFile = File(...)) -> dict:
+    """上传本地文件并返回后端可访问的 source_path。"""
+    if file is None:
+        raise HTTPException(status_code=400, detail="缺少上传文件")
+    original = str(file.filename or "").strip()
+    if not original:
+        raise HTTPException(status_code=400, detail="文件名为空")
+
+    project_root = Path(__file__).resolve().parents[2]
+    target_dir = project_root / "Inputs" / "uploaded"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_name = _safe_filename(original)
+    unique_name = f"{Path(safe_name).stem}_{uuid.uuid4().hex[:8]}{Path(safe_name).suffix}"
+    target = (target_dir / unique_name).resolve()
+    try:
+        with target.open("wb") as out:
+            shutil.copyfileobj(file.file, out)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"上传保存失败: {exc}") from exc
+    finally:
+        try:
+            await file.close()
+        except Exception:
+            pass
+
+    return {
+        "filename": original,
+        "saved_name": unique_name,
+        "source_path": str(target),
+    }
 
 
 @router.post("/workflows/save", response_model=WorkflowStoredDocument)
@@ -73,13 +129,13 @@ def list_run_history(
 
 
 @router.get("/workflows/runs/{run_id}", response_model=WorkflowRunHistoryDetail)
-def get_run_history(run_id: str) -> WorkflowRunHistoryDetail:
-    """读取单次运行完整 JSON。"""
+async def get_run_history(run_id: str) -> WorkflowRunHistoryDetail:
+    """读取单次运行完整 JSON（磁盘 IO 在线程池执行，避免巨型 JSON 阻塞其它 API）。"""
     try:
-        run_store.validate_run_id(run_id)
+        safe_id = run_store.validate_run_id(run_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    doc = run_store.load_record(run_id)
+    doc = await asyncio.to_thread(run_store.load_record, safe_id)
     if doc is None:
         raise HTTPException(status_code=404, detail="运行记录不存在")
     return WorkflowRunHistoryDetail.model_validate(doc)

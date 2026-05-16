@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { computed, nextTick, onMounted, ref, unref, watch } from 'vue';
-import { fetchRagWorkflowRunDetail, fetchRagWorkflowTemplateGet, fetchRagWorkflowTemplates } from '@/service/api';
+import { fetchRagWorkflowTemplateGet, fetchRagWorkflowTemplates } from '@/service/api';
 import type { Edge, Node, ViewportTransform, VueFlowStore } from '@vue-flow/core';
 import type { RagFlowNodeData, RagNodeMetadata, RagWorkflowStoredDocument, RagWorkflowTemplateSummary } from '@/types/ragWorkflow';
 import WorkflowCanvas from './components/WorkflowCanvas.vue';
@@ -78,6 +78,10 @@ const filterRunsByCurrentWorkflow = ref(true);
 const runtimeTrace = useRuntimeTraceStore();
 const traceState = runtimeTrace.state;
 const orderedTraceNodes = runtimeTrace.orderedNodes;
+
+const traceObsImportFallback = computed(() =>
+  runtimeTrace.lastImportedRunRecord ? unref(runtimeTrace.lastImportedRunRecord) : null
+);
 const dockOpen = ref(false);
 const dockTab = ref<'json' | 'run' | 'node_output' | 'history'>('json');
 
@@ -131,6 +135,7 @@ const {
   runErrorMsg,
   runStatus,
   runWorkflow,
+  syncRunStateFromServer,
   runAnswerSnippet
 } = useWorkflowRun({
   refreshRunHistory
@@ -1136,13 +1141,26 @@ async function handleRunWorkflow() {
       ...flowToRunPayload(flowNodes.value, flowEdges.value, workflowId.value.trim(), workflowInputJson.value),
       run_id: runId
     },
-    workflowInputJson.value
+    workflowInputJson.value,
+    runId
   );
-  if (res?.run_id) {
-    saveLastRunIdForWorkflow(workflowId.value, res.run_id);
+  const finalRunId = String(res?.run_id || runId).trim();
+  if (finalRunId) {
+    saveLastRunIdForWorkflow(workflowId.value, finalRunId);
   }
-  applyRuntimeNodeStats(res);
-  await runtimeTrace.refreshSnapshot();
+  const detail = finalRunId ? await syncRunStateFromServer(finalRunId) : null;
+  const statsSource = detail ?? res;
+  if (statsSource) {
+    applyRuntimeNodeStats(statsSource);
+  }
+  if (detail && !detail.running) {
+    runtimeTrace.importRunJson(detail as unknown as Record<string, unknown>);
+  } else if (finalRunId) {
+    await runtimeTrace.refreshSnapshot();
+    if (detail?.running) {
+      await runtimeTrace.startTracking(finalRunId, traceNodeCatalog.value);
+    }
+  }
 }
 
 async function restoreLatestRunTrace() {
@@ -1151,23 +1169,23 @@ async function restoreLatestRunTrace() {
   const candidateRunIds = [rememberedRunId, latestRunId].filter((id, idx, arr) => !!id && arr.indexOf(id) === idx);
   if (!candidateRunIds.length) return;
 
-  let restored = false;
   runtimeTrace.stopTracking();
   runtimeTrace.clear();
   runtimeTrace.setNodeCatalog(traceNodeCatalog.value);
-  for (const runId of candidateRunIds) {
-    traceState.runId = runId;
-    const ok = await runtimeTrace.refreshSnapshot();
-    if (!ok) continue;
-    try {
-      const runDetail = await fetchRagWorkflowRunDetail(runId);
-      lastRunRaw.value = stringifyPretty(runDetail);
-      runStatus.value = runDetail.success ? 'success' : runDetail.running ? 'running' : 'error';
-      runErrorMsg.value = runDetail.error || '';
-    } catch {
-      // ignore detail sync errors
+
+  let restored = false;
+  for (const rid of candidateRunIds) {
+    const runDetail = await syncRunStateFromServer(rid);
+    if (!runDetail) continue;
+    saveLastRunIdForWorkflow(workflowId.value, rid);
+    const asRecord = runDetail as unknown as Record<string, unknown>;
+    if (runDetail.running) {
+      runtimeTrace.importRunJson(asRecord);
+      await runtimeTrace.startTracking(rid, traceNodeCatalog.value);
+      await runtimeTrace.refreshSnapshot();
+    } else {
+      runtimeTrace.importRunJson(asRecord);
     }
-    await runtimeTrace.startTracking(runId, traceNodeCatalog.value);
     restored = true;
     break;
   }
@@ -1194,9 +1212,9 @@ onMounted(() => {
     type: n.type === 'default' ? 'ragWf' : n.type
   })) as typeof flowNodes.value;
   flowEdges.value = normalizeRagVueFlowEdges(flowEdges.value);
-  void fetchNodeTypes();
-  updateWorkflowPreview();
   void (async () => {
+    await fetchNodeTypes();
+    updateWorkflowPreview();
     await refreshRunHistory();
     await restoreLatestRunTrace();
   })();
@@ -1331,6 +1349,7 @@ onMounted(() => {
             :run-history-loading="runHistoryLoading"
             :run-detail-loading="runDetailLoading"
             :run-detail-full="runDetailFull"
+            :trace-import-fallback="traceObsImportFallback"
             :pretty-json="prettyJson"
             :trace-state="traceState"
             :trace-ordered-nodes="orderedTraceNodes"

@@ -73,15 +73,38 @@ class MinerUParserAdapter(ParserAdapter):
         """
         统一解析输出目录：
         - 节点显式传入 output_dir：优先使用
-        - 未传时回退 .env 的 OUTPUT_DIR
-        - 都没有时返回 None（交由下游用临时目录）
+        - 未传时默认当前项目根目录下 ``output``（复制项目后自动跟随）
+        - 可通过 .env 暴露策略：
+          - ``OUTPUT_DIR_POLICY=project``（默认）：OUTPUT_DIR 仅允许项目内路径；项目外绝对路径会被忽略
+          - ``OUTPUT_DIR_POLICY=env``：严格使用 OUTPUT_DIR（即便是项目外绝对路径）
+        - 若 OUTPUT_DIR 是相对路径，则按当前项目根目录解析
         """
+        project_root = Path(__file__).resolve().parents[2]
+        project_output = (project_root / "output").resolve()
+        output_policy = str(os.getenv("OUTPUT_DIR_POLICY") or "project").strip().lower()
+        allow_external_env_output = output_policy in {"env", "absolute", "external"}
+
         candidate = str(output_dir or "").strip()
-        if not candidate:
-            candidate = str(os.getenv("OUTPUT_DIR") or "").strip()
-        if not candidate:
-            return None
-        return str(Path(candidate).expanduser().resolve())
+        if candidate:
+            p = Path(candidate).expanduser()
+            return str((p if p.is_absolute() else (project_root / p)).resolve())
+
+        env_out = str(os.getenv("OUTPUT_DIR") or "").strip()
+        if env_out:
+            p = Path(env_out).expanduser()
+            resolved = (p if p.is_absolute() else (project_root / p)).resolve()
+            if p.is_absolute():
+                if allow_external_env_output:
+                    return str(resolved)
+                try:
+                    resolved.relative_to(project_root)
+                    return str(resolved)
+                except Exception:  # noqa: BLE001
+                    # 默认 project 策略下，旧工程绝对路径会被忽略，避免复制项目后继续写旧目录。
+                    return str(project_output)
+            return str(resolved)
+
+        return str(project_output)
 
     @staticmethod
     def _checkpoint_path(base_output_dir: Path) -> Path:

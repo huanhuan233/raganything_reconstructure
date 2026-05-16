@@ -27,7 +27,10 @@ from .graph.entity_merge_node import EntityMergeNode
 from .graph.entity_relation_extract_node import EntityRelationExtractNode
 from .graph.graph_merge_node import GraphMergeNode
 from .graph.graph_persist_node import GraphPersistNode
+from .graph.constraint_relation_persist_node import ConstraintRelationPersistNode
+from .graph.ontology_graph_persist_node import OntologyGraphPersistNode
 from .graph.relation_merge_node import RelationMergeNode
+from .graph.semantic_relation_persist_node import SemanticRelationPersistNode
 from .workflow.context_build_node import ContextBuildNode
 from .workflow.workflow_end_node import WorkflowEndNode
 from .workflow.workflow_start_node import WorkflowStartNode
@@ -60,11 +63,13 @@ def register_builtin_nodes() -> None:
     reg.register("graph.retrieve", GraphRetrieveNode)
     reg.register("rerank", RerankNode)
     reg.register("rag.delete", RAGDeleteNode)
-    # LightRAG 查询路径细粒度占位（与 operate 内阶段对应，见文档）
     reg.register("entity.merge", EntityMergeNode)
     reg.register("relation.merge", RelationMergeNode)
     reg.register("graph.merge", GraphMergeNode)
     reg.register("graph.persist", GraphPersistNode)
+    reg.register("ontology.graph.persist", OntologyGraphPersistNode)
+    reg.register("semantic.relation.persist", SemanticRelationPersistNode)
+    reg.register("constraint.relation.persist", ConstraintRelationPersistNode)
     reg.register("retrieval.merge", RetrievalMergeNode)
     reg.register("context.build", ContextBuildNode)
     reg.register("llm.generate", LLMGenerateNode)
@@ -100,6 +105,9 @@ __all__ = [
     "RelationMergeNode",
     "GraphMergeNode",
     "GraphPersistNode",
+    "OntologyGraphPersistNode",
+    "SemanticRelationPersistNode",
+    "ConstraintRelationPersistNode",
     "RetrievalMergeNode",
     "ContextBuildNode",
     "LLMGenerateNode",

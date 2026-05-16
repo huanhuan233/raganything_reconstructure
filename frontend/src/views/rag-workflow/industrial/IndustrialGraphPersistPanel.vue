@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import {
   fetchKnowledgeDiscover,
   fetchNeo4jGraphPartitionEnsure,
@@ -77,7 +77,6 @@ async function ensurePartition(): Promise<void> {
   creating.value = true;
   try {
     await fetchNeo4jGraphPartitionEnsure({
-      database: 'neo4j',
       partition: namespace,
       auto_create_constraints: true
     });
@@ -91,6 +90,10 @@ async function ensurePartition(): Promise<void> {
   }
 }
 
+onMounted(() => {
+  void loadDiscover();
+});
+
 </script>
 
 <template>
@@ -100,6 +103,10 @@ async function ensurePartition(): Promise<void> {
       <ElButton size="small" :loading="loading" @click="() => void loadDiscover()">刷新图分区</ElButton>
     </div>
     <ElAlert v-if="discoverError" type="error" :closable="false" show-icon :title="discoverError" />
+    <ElAlert type="info" :closable="false" show-icon class="igp-explainer">
+      下拉来自 Neo4j 中对 <code>namespace</code>/<code>graph_partition</code> / <code>workspace</code> 等属性的去重枚举；后端在「新建图分区」成功后也会写入占位节点以便刷新可见。若配置了
+      <code>NEO4J_DATABASE</code>，Discover 与该库对齐；未完成落库或未点「刷新图分区」时可能仍为空。
+    </ElAlert>
     <ElAlert
       v-for="(w, idx) in activeWarnings"
       :key="`igp-w-${idx}`"
@@ -193,6 +200,11 @@ async function ensurePartition(): Promise<void> {
   border-radius: 10px;
   padding: 12px;
   background: #fff;
+}
+
+.igp-explainer {
+  margin-bottom: 10px;
+  font-size: 12px;
 }
 
 .igp-head {

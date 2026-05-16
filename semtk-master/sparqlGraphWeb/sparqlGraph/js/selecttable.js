@@ -1,0 +1,357 @@
+/**
+ ** Copyright 2017 General Electric Company
+ **
+ ** Authors:  Paul Cuddihy, Justin McHugh
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ **
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ **
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
+//
+//  This builds an HTML table mean for selecting (like a <select>).
+//  It is a severe compromise due to the fact that IIDX dataTables / dataGrid
+//  does not seem up to the task, and we don't want to import yet
+//  another version of jquery.   So it is hand-spun.
+//
+//  Uses .css from IIDX
+//
+
+define([	// properly require.config'ed   bootstrap-modal
+        	'sparqlgraph/js/iidxhelper',
+			// shimmed
+
+		],
+
+	function(IIDXHelper) {
+
+		/*
+         *  Params mimic jquery dataTable:
+         *    cols - array of column names
+         *    rows - array of row arrays.
+         *           each cell can be either:
+         *               innerHTML string, including ""
+         *               child dom
+         *    widths - array of column widths in %
+         *    heightRows - Make rows compact 1ch and height about this many rows.
+         #                 0 means non-compact rows and no height limit.
+         *
+         *  Cell widths:  are in percents.  Contents are truncated w/ ellipses
+         *  heightRows is approximate
+         */
+		var SelectTable = function (rows, cols, widths, heightRows, multiFlag, optFilterFlag, optClickCallback) {
+			this.rows = rows;
+            this.cols = cols;
+            this.widths = widths;
+            this.heightRows = heightRows;
+            this.multiFlag = multiFlag;
+            this.filterFlag = typeof optFilterFlag == "undefined" ? true : optFilterFlag;
+            this.clickCallback = optClickCallback;
+
+            this.dom = null;
+            this.headTab = null;
+            this.rowsTab = null;
+            this.filter = null;     // this.filter[12][1] = true if row 12 col 1 matches filter
+			this.filterInputElems = [];
+			this.rowDiv = null;
+            this.populateTable();
+		};
+
+		SelectTable.prototype = {
+            getNumRows : function () {
+                return this.rowsTab.rows.length;
+            },
+
+            // get the <td>
+            getCellDom : function (r, c) {
+                return this.rowsTab.rows[r].children[c];
+            },
+
+            getTableDom : function () {
+                return this.dom;
+            },
+
+			getScrollY : function () {
+				return this.rowDiv ? this.rowDiv.scrollTop : 0;
+			},	
+			
+			setScrollY : function (y) {
+				if (this.rowDiv) {
+					this.rowDiv.scrollTop = y;
+				}
+			},
+			
+			/**
+				Get list of values in col colName of each selected row
+			 */
+            getSelectedValues : function (colName) {
+                var ret = [];
+                var indices = this.getSelectedIndices();
+
+                for (var i=0; i < indices.length; i++) {
+                    ret.push(this.rows[indices[i]][this.getColumnByName(colName)]);
+                }
+
+                return ret;
+            },
+            
+            /**
+            	Select all rows where a value of valList matches the value in col colName
+             */
+            selectValues : function (colName, valList) {
+				var c = this.getColumnByName(colName);
+				for (var i=0; i < this.rows.length; i++) {
+					if (valList.indexOf(this.rows[i][c]) > -1) {
+						this.selectRow(i);
+					}
+				}
+			},
+
+            getColumnByName : function (colName) {
+                var match = colName.toLowerCase();
+
+                for (var i=0; i < this.cols.length; i++) {
+                    if (this.cols[i].toLowerCase() == match) {
+                        return i;
+                    }
+                }
+                return -1;
+            },
+            
+
+            /*
+             *
+             */
+			populateTable : function () {
+                this.filter = [];
+                var row, cell;
+                this.dom = document.createElement("div");
+
+                // header table
+                this.headTab = document.createElement("table");
+                this.dom.appendChild(this.headTab);
+                this.headTab.classList.add("table");
+                this.headTab.classList.add("table-condensed");
+                this.headTab.style.width="100%";
+                this.headTab.style.marginBottom="0";
+
+                // header
+                var head = document.createElement("thead");
+                var input;
+                this.headTab.appendChild(head);
+
+                row = document.createElement("tr");
+                head.appendChild(row);
+
+                // header
+                this.filterInputElems = [];
+                for (var i=0; i < this.cols.length; i++) {
+                    cell = document.createElement("th");
+                    row.appendChild(cell);
+                    cell.innerHTML = this.cols[i];
+
+                    // filter text box
+                    if (this.filterFlag) {
+                        cell.appendChild(document.createElement("br"));
+                        input = document.createElement("input");
+                        cell.appendChild(input);
+                        input.type = "text";
+                        input.classList.add("input-small");
+                        input.placeholder=("filter...");
+                        input.onkeyup=this.filterCallback.bind(this, input, i);
+                        this.filterInputElems.push(input);
+                    }
+
+                    // cell styles
+                    cell.style.width = this.widths[i] + "%";
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.overflow = "hidden";
+                    cell.style.textOverflow = "ellipsis";
+                }
+
+                // row div and # rows
+                this.rowDiv = document.createElement("div");
+                this.dom.appendChild(this.rowDiv);
+                if (this.heightRows != 0) {
+                    this.rowDiv.style.height = this.heightRows * 3 + "ch";
+                    this.rowDiv.style.overflowY = "auto";
+                }
+                this.rowDiv.style.width = "100%";
+
+                this.rowsTab = document.createElement("table");
+                this.rowDiv.appendChild(this.rowsTab);
+                this.rowsTab.classList.add("table");
+                this.rowsTab.classList.add("dataTable");
+                this.rowsTab.classList.add("table-condensed");
+                this.rowsTab.classList.add("table-bordered");
+                this.rowsTab.style.width="100%";
+                this.rowsTab.style.tableLayout="fixed";
+
+                // body
+                var body = document.createElement("tbody");
+                this.rowsTab.appendChild(body);
+
+                // loop through rows
+                for (i=0; i < this.rows.length; i++) {
+                    this.addRow(this.rows[i]);
+                }
+            },
+
+            filterCallback : function(textInput, col) {
+                var filter = textInput.value.toLowerCase();
+                var last, curr;
+
+                for (var i=0; i < this.rowsTab.rows.length; i++) {
+                    // save last and set new filter
+                    last = this.filter[i][col];
+                    curr = (this.rows[i][col].toLowerCase().indexOf(filter) > -1);
+                    this.filter[i][col] = curr;
+
+                    if (curr == last) {
+
+                    } else if (!curr) {
+                        this.rowsTab.rows[i].style.display = "none";
+                    } else {
+                        // switched to false.  check all of them
+                        this.rowsTab.rows[i].style.display = "";
+                        for (var j=0; j < this.cols.length; j++) {
+                            if (!this.filter[i][j]) {
+                                this.rowsTab.rows[i].style.display = "none";
+                                break;
+                            }
+                        }
+                    }
+                }
+            },
+
+			reapplyAllFilters : function() {
+				for (var i=0; i < this.filterInputElems.length; i++) {
+					this.filterCallback(this.filterInputElems[i], i);
+				}
+			},
+			
+			replaceRows : function(rows) {
+				this.filter = [];
+				var tbody = this.rowsTab.getElementsByTagName("tbody");
+				tbody[0].innerHTML = "";
+				this.rows = rows;
+				for (var r of rows) {
+					this.addRow(r);
+				}
+				this.reapplyAllFilters();
+			},
+		
+            addRow : function(rowList) {
+                this.filter.push([]);
+
+                // create row
+                var row = this.rowsTab.insertRow(-1);
+                row.classList.add("odd");
+                if (this.heightRows != 0) {
+                    row.style.height = "1ch";
+                }
+                row.onclick = this.rowClick.bind(this);
+
+                // loop through cols
+                for (var j=0; j < this.cols.length; j++) {
+                    this.filter[this.filter.length-1].push(true);
+                    var cell = document.createElement("td");
+                    row.appendChild(cell);
+                    if (typeof rowList[j] == "string") {
+                        cell.innerHTML = rowList[j];
+                    } else {
+                        cell.appendChild(rowList[j]);
+                    }
+                    cell.style.width = this.widths[j] + "%";
+                    if (this.heightRows != 0) {
+                        cell.style.height = "1ch";
+                    }
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.overflow = "hidden";
+                    cell.style.textOverflow = "ellipsis";
+                }
+            },
+
+            rowClick : function (e) {
+
+                var tr = e.target;
+                while (tr.nodeName != "TR") {
+                    tr = tr.parentNode;
+                }
+
+                // unselect others if not multiFlag
+                if (! this.multiFlag) {
+                    for (var i=0; i < this.rowsTab.rows.length; i++) {
+                        if (this.rowsTab.rows[i] != tr) {
+                            this.rowsTab.rows[i].classList.remove("row_selected");
+                        }
+                    }
+                }
+
+                // toggle selected row
+                if (tr.classList.contains("row_selected")) {
+                    tr.classList.remove("row_selected");
+                } else {
+                    tr.classList.add("row_selected");
+                }
+
+                if (this.clickCallback) {
+                    this.clickCallback(tr);
+                }
+            },
+
+            selectRow : function (r) {
+                // unselect others if not multiFlag
+                if (! this.multiFlag) {
+                    this.deselectAll();
+                }
+                this.rowsTab.rows[r].classList.add("row_selected");
+            },
+            
+            deselectAll : function () {
+				for (var i=0; i < this.rowsTab.rows.length; i++) {
+                    this.rowsTab.rows[i].classList.remove("row_selected");
+                }
+			},
+
+            removeRow : function (i) {
+                this.rowsTab.rows[i].remove();
+            },
+
+            // boolRowFunc takes an array of <td> element doms
+            findRow : function (boolRowFunc) {
+                var ret = [];
+                for (var i=0; i < this.rowsTab.rows.length; i++) {
+                    if (boolRowFunc(this.rowsTab.rows[i].children)) {
+                        ret.push(i);
+                    }
+                }
+                return ret;
+            },
+
+            /*
+             * return the selected row indices
+             * or []
+             */
+            getSelectedIndices : function () {
+                var ret = [];
+                for (var i=0; i < this.rowsTab.rows.length; i++) {
+                    if (this.rowsTab.rows[i].classList.contains("row_selected")) {
+                        ret.push(i);
+                    }
+                }
+                return ret;
+            }
+        };
+
+		return SelectTable;            // return the constructor
+	}
+);

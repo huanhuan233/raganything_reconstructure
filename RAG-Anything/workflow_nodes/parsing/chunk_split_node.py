@@ -10,6 +10,7 @@ from runtime_kernel.entities.content_types import is_formula_type, is_table_type
 from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.content_access import ContentAccess
 
 
 class ChunkSplitNode(BaseNode):
@@ -270,9 +271,13 @@ class ChunkSplitNode(BaseNode):
         )
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
-        if not isinstance(input_data, dict):
-            return NodeResult(success=False, error="chunk.split 期望输入为 dict")
-        payload = dict(input_data)
+        payload = dict(input_data) if isinstance(input_data, dict) else {}
+        parsed_document = ContentAccess.get_parsed_document(context, self.node_id)
+        if isinstance(parsed_document, dict):
+            payload.setdefault("parsed_document", parsed_document)
+            if "content_list" not in payload:
+                raw_list = parsed_document.get("raw_content_list")
+                payload["content_list"] = raw_list if isinstance(raw_list, list) else []
 
         chunk_token_size = max(1, int(self.config.get("chunk_token_size") or 1200))
         chunk_overlap = max(0, int(self.config.get("chunk_overlap_token_size") or 100))
@@ -298,6 +303,7 @@ class ChunkSplitNode(BaseNode):
                 "used_original_algorithm": True,
                 "warnings": collect_warnings,
             }
+            ContentAccess.set_chunks(context, self.node_id, [])
             return NodeResult(success=True, data=out_empty, metadata={"node": "chunk.split"})
 
         adapter = context.adapters.get("lightrag_chunk")
@@ -333,6 +339,7 @@ class ChunkSplitNode(BaseNode):
         out = dict(payload)
         out["chunks"] = chunks if isinstance(chunks, list) else []
         out["chunk_summary"] = summary
+        ContentAccess.set_chunks(context, self.node_id, out["chunks"])
         context.log(
             f"[ChunkSplitNode] input_items={summary['input_items']} total_chunks={summary['total_chunks']} "
             f"skip={sorted(skip_pipelines)}"

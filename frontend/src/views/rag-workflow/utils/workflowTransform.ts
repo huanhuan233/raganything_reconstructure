@@ -8,6 +8,7 @@ import type {
   RagWorkflowSavePayload,
   RagWorkflowStoredDocument
 } from '@/types/ragWorkflow';
+import { isrSemanticFieldsFromMeta } from '@/components/runtime/isrPalette';
 import { safeParseJson5 } from './jsonHelper';
 
 type SkinnyEdge = { source?: string; target?: string };
@@ -176,7 +177,8 @@ export function storedRecordToFlowNode(
     nodeType,
     config,
     isPlaceholder: Boolean(metaCatalog?.is_placeholder),
-    implementationStatus: resolveImplementationStatus(metaCatalog)
+    implementationStatus: resolveImplementationStatus(metaCatalog),
+    ...isrSemanticFieldsFromMeta(metaCatalog)
   };
   return {
     id,

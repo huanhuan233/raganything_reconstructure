@@ -9,6 +9,8 @@ from typing import Any
 
 from fastapi import APIRouter
 
+from adapters.runtime.env_resolution import effective_neo4j_database
+
 from ..raganything_runtime import _ensure_dotenv_loaded
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
@@ -104,7 +106,7 @@ def _discover_neo4j_workspaces() -> dict[str, Any]:
     uri = (os.getenv("NEO4J_URI") or os.getenv("NEO4J_STORAGE_URI") or "").strip()
     user = (os.getenv("NEO4J_USERNAME") or os.getenv("NEO4J_USER") or os.getenv("NEO4J_STORAGE_USERNAME") or "neo4j").strip()
     password = (os.getenv("NEO4J_PASSWORD") or os.getenv("NEO4J_STORAGE_PASSWORD") or "").strip()
-    database = (os.getenv("NEO4J_DATABASE") or "neo4j").strip() or "neo4j"
+    database = effective_neo4j_database()
     if not uri:
         warnings.append("NEO4J_URI is not configured")
         return {"backend": "neo4j", "workspaces": workspaces, "labels": labels, "warnings": warnings}

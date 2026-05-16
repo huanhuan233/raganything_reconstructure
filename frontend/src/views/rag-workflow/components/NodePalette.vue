@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { RagNodeImplementationStatus, RagNodeMetadata } from '@/types/ragWorkflow';
+import { resolveIsrVisualDomain } from '@/components/runtime/isrPalette';
 import { buildPaletteGroups } from '../utils/nodeCategory';
 
 const props = defineProps<{
@@ -18,6 +19,11 @@ const emit = defineEmits<{
 const nodePickerSearch = ref('');
 
 const filteredPickerGroups = computed(() => buildPaletteGroups(props.catalog, nodePickerSearch.value.trim()));
+
+function isrAccentClass(meta: RagNodeMetadata): string {
+  const d = resolveIsrVisualDomain(meta.node_type);
+  return d ? `rag-wf-np-item--isr rag-wf-np-item--isr-${d}` : '';
+}
 
 function statusOf(meta: RagNodeMetadata): RagNodeImplementationStatus {
   return meta.implementation_status ?? (meta.is_placeholder ? 'placeholder' : 'real');
@@ -48,6 +54,7 @@ function statusOf(meta: RagNodeMetadata): RagNodeImplementationStatus {
             :key="meta.node_type"
             type="button"
             class="rag-wf-np-item"
+            :class="isrAccentClass(meta)"
             @click="emit('add-node', meta)"
           >
             <div class="rag-wf-np-icon">
@@ -240,5 +247,39 @@ function statusOf(meta: RagNodeMetadata): RagNodeImplementationStatus {
   color: #1d4ed8;
   background: #eff6ff;
   border: 1px solid rgb(96 165 250 / 38%);
+}
+
+.rag-wf-np-item--isr {
+  border-left: 4px solid #64748b;
+}
+
+.rag-wf-np-item--isr-ontology {
+  border-left-color: #1e3a8a;
+  background: linear-gradient(90deg, rgb(30 58 138 / 6%), #fff);
+}
+
+.rag-wf-np-item--isr-constraint {
+  border-left-color: #b91c1c;
+  background: linear-gradient(90deg, rgb(185 28 28 / 6%), #fff);
+}
+
+.rag-wf-np-item--isr-semantic {
+  border-left-color: #7c3aed;
+  background: linear-gradient(90deg, rgb(124 58 237 / 7%), #fff);
+}
+
+.rag-wf-np-item--isr-state {
+  border-left-color: #ea580c;
+  background: linear-gradient(90deg, rgb(234 88 12 / 7%), #fff);
+}
+
+.rag-wf-np-item--isr-graph {
+  border-left-color: #0e7490;
+  background: linear-gradient(90deg, rgb(14 116 144 / 7%), #fff);
+}
+
+.rag-wf-np-item--isr-runtime {
+  border-left-color: #334155;
+  background: linear-gradient(90deg, rgb(51 65 85 / 8%), #fff);
 }
 </style>
