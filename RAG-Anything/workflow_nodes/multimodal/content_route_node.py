@@ -140,10 +140,16 @@ class ContentRouteNode(BaseNode):
         ignored_items = 0
         discarded_items = 0
 
-        for raw in content_list:
+        for idx, raw in enumerate(content_list, start=1):
             if not isinstance(raw, dict):
                 continue
             item = dict(raw)
+            canonical_block_id = str(
+                raw.get("block_id") or raw.get("id") or raw.get("item_id") or f"mineru_block_{idx}"
+            ).strip()
+            if canonical_block_id:
+                raw.setdefault("block_id", canonical_block_id)
+                item.setdefault("block_id", canonical_block_id)
             t = str(item.get("type", "")).strip().lower() or "unknown"
             type_distribution[t] += 1
 

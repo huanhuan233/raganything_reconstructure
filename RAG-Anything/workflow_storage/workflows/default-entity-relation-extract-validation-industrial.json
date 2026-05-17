@@ -188,7 +188,7 @@
         "entity_extract_max_gleaning": 1,
         "language": "auto",
         "include_multimodal_chunks": true,
-        "max_chunks": 200,
+        "max_chunks": 0,
         "use_llm_cache": false
       },
       "position": {

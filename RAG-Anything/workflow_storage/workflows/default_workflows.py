@@ -10,6 +10,31 @@ def _utc_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+_DEFAULT_SEMANTIC_BLOCK_MERGE_CFG: Dict[str, Any] = {
+    "semantic_merge_token_limit": 2048,
+    "require_same_page": True,
+    "protect_multimodal_boundaries": True,
+    "protect_industrial_boundaries": True,
+}
+
+
+def _semantic_block_merge_step() -> Tuple[str, str, str, Dict[str, Any]]:
+    return ("semantic_block_merge", "semantic.block.merge", "语义块合并", dict(_DEFAULT_SEMANTIC_BLOCK_MERGE_CFG))
+
+
+def _chunk_split_cfg(extra: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    base: Dict[str, Any] = {
+        "chunk_token_size": 1200,
+        "chunk_overlap_token_size": 100,
+        "include_multimodal_descriptions": True,
+        "skip_pipelines": ["discard_pipeline"],
+        "prefer_semantic_blocks": True,
+    }
+    if extra:
+        base.update(extra)
+    return base
+
+
 def _mk_node(node_id: str, node_type: str, x: float, y: float, label: str, config: Dict[str, Any] | None = None) -> Dict[str, Any]:
     return {
         "id": node_id,
@@ -290,16 +315,12 @@ def build_default_entity_relation_extract_validation_workflow() -> Dict[str, Any
         ("content_filter", "content.filter", "内容过滤", {"drop_empty": True, "keep_page_numbers": True}),
         ("multimodal_process", "multimodal.process", "多模态预处理", {"use_vlm": False}),
         ("content_route", "content.route", "内容路由", {"keep_unrouted": True, "drop_discard_types": True}),
+        _semantic_block_merge_step(),
         (
             "chunk_split",
             "chunk.split",
             "文本切片",
-            {
-                "chunk_token_size": 1200,
-                "chunk_overlap_token_size": 100,
-                "include_multimodal_descriptions": True,
-                "skip_pipelines": ["discard_pipeline"],
-            },
+            _chunk_split_cfg(),
         ),
         (
             "entity_relation_extract",
@@ -310,7 +331,7 @@ def build_default_entity_relation_extract_validation_workflow() -> Dict[str, Any
                 "entity_extract_max_gleaning": 1,
                 "language": "auto",
                 "include_multimodal_chunks": True,
-                "max_chunks": 50,
+                "max_chunks": 0,
                 "use_llm_cache": False,
             },
         ),
@@ -328,7 +349,7 @@ def build_default_entity_relation_extract_validation_workflow() -> Dict[str, Any
     return _build_doc(
         workflow_id="default-entity-relation-extract-validation",
         name="实体关系抽取验证模板",
-        description="workflow.start -> document.parse -> content.filter -> multimodal.process -> content.route -> chunk.split -> entity_relation.extract -> workflow.end",
+        description="workflow.start -> document.parse -> content.filter -> multimodal.process -> content.route -> semantic.block.merge -> chunk.split -> entity_relation.extract -> workflow.end",
         nodes=nodes,
         edges=edges,
         entry_node_ids=["start"],
@@ -349,6 +370,7 @@ def build_default_entity_relation_extract_validation_with_industrial_workflow() 
         ("content_filter", "content.filter", "内容过滤", {"drop_empty": True, "keep_page_numbers": True}),
         ("multimodal_process", "multimodal.process", "多模态预处理", {"use_vlm": False}),
         ("content_route", "content.route", "内容路由", {"keep_unrouted": True, "drop_discard_types": True}),
+        _semantic_block_merge_step(),
         (
             "industrial_structure",
             "industrial.structure_recognition",
@@ -366,12 +388,7 @@ def build_default_entity_relation_extract_validation_with_industrial_workflow() 
             "chunk_split",
             "chunk.split",
             "文本切片",
-            {
-                "chunk_token_size": 1200,
-                "chunk_overlap_token_size": 100,
-                "include_multimodal_descriptions": True,
-                "skip_pipelines": ["discard_pipeline"],
-            },
+            _chunk_split_cfg(),
         ),
         (
             "embedding_index",
@@ -388,7 +405,7 @@ def build_default_entity_relation_extract_validation_with_industrial_workflow() 
                 "entity_extract_max_gleaning": 1,
                 "language": "auto",
                 "include_multimodal_chunks": True,
-                "max_chunks": 50,
+                "max_chunks": 0,
                 "use_llm_cache": False,
             },
         ),
@@ -436,8 +453,9 @@ def build_default_entity_relation_extract_validation_with_industrial_workflow() 
         name="实体关系抽取验证模板（工业增强）",
         description=(
             "workflow.start -> document.parse -> content.filter -> multimodal.process -> content.route -> "
-            "industrial.structure_recognition -> industrial.table_parse -> industrial.constraint_extract -> "
-            "industrial.process_extract -> chunk.split -> embedding.index -> entity_relation.extract -> "
+            "semantic.block.merge -> industrial.structure_recognition -> industrial.table_parse -> "
+            "industrial.constraint_extract -> industrial.process_extract -> chunk.split -> embedding.index -> "
+            "entity_relation.extract -> "
             "relation.merge -> industrial.graph_build -> industrial.graph.persist -> storage.persist -> workflow.end"
         ),
         nodes=nodes,
@@ -463,6 +481,7 @@ def build_default_industrial_ontology_object_library_workflow() -> Dict[str, Any
         ("content_filter", "content.filter", "内容过滤", {"drop_empty": True, "keep_page_numbers": True}),
         ("multimodal_process", "multimodal.process", "多模态预处理", {"use_vlm": False}),
         ("content_route", "content.route", "内容路由", {"keep_unrouted": True, "drop_discard_types": True}),
+        _semantic_block_merge_step(),
         (
             "industrial_structure",
             "industrial.structure_recognition",
@@ -480,12 +499,7 @@ def build_default_industrial_ontology_object_library_workflow() -> Dict[str, Any
             "chunk_split",
             "chunk.split",
             "文本切片",
-            {
-                "chunk_token_size": 1200,
-                "chunk_overlap_token_size": 100,
-                "include_multimodal_descriptions": True,
-                "skip_pipelines": ["discard_pipeline"],
-            },
+            _chunk_split_cfg(),
         ),
         (
             "embedding_index",
@@ -502,7 +516,7 @@ def build_default_industrial_ontology_object_library_workflow() -> Dict[str, Any
                 "entity_extract_max_gleaning": 1,
                 "language": "auto",
                 "include_multimodal_chunks": True,
-                "max_chunks": 50,
+                "max_chunks": 0,
                 "use_llm_cache": False,
             },
         ),
@@ -595,6 +609,131 @@ def build_default_industrial_ontology_object_library_workflow() -> Dict[str, Any
     )
 
 
+def build_default_industrial_ontology_from_chunk_split_workflow() -> Dict[str, Any]:
+    """
+    与 ``default-industrial-ontology-object-library`` 后半段一致，但从 ``chunk.split`` 起执行。
+
+    ``input_data`` 须替换为：**某次完整跑完后** ``industrial.process_extract`` 节点的 ``result.data``
+    （或与之等价的字典：至少含可供 chunk.split 使用的 ``routes``/``content_list`` 及下游工业图所需的结构字段）。
+    """
+    chunk_onward: List[Tuple[str, str, str, Dict[str, Any]]] = [
+        _semantic_block_merge_step(),
+        (
+            "chunk_split",
+            "chunk.split",
+            "文本切片",
+            _chunk_split_cfg(),
+        ),
+        (
+            "embedding_index",
+            "embedding.index",
+            "向量索引",
+            {"include_raw_item": True, "allow_without_vector": True, "batch_size": 16},
+        ),
+        (
+            "entity_relation_extract",
+            "entity_relation.extract",
+            "实体关系抽取",
+            {
+                "model": "default",
+                "entity_extract_max_gleaning": 1,
+                "language": "auto",
+                "include_multimodal_chunks": True,
+                "max_chunks": 0,
+                "use_llm_cache": False,
+            },
+        ),
+        (
+            "relation_merge",
+            "relation.merge",
+            "关系归并",
+            {
+                "merge_engine": "lightrag",
+                "merge_strategy": "canonical",
+                "similarity_threshold": 0.9,
+                "use_llm_summary_on_merge": False,
+            },
+        ),
+        ("industrial_graph", "industrial.graph_build", "工业图谱构建", {}),
+        (
+            "ontology_object_define",
+            "ontology.object.define",
+            "工业本体对象定义",
+            {
+                "ontology_type": "Part",
+                "object_id": "",
+                "label": "默认占位零件",
+                "attributes": {},
+                "source_refs": [],
+            },
+        ),
+        ("isr_constraint_extract", "constraint.extract", "语义约束抽取（ISR）", {}),
+        (
+            "isr_semantic_plan",
+            "semantic.runtime.plan",
+            "语义运行时执行计划 IR",
+            {"use_dag_topo": False},
+        ),
+        (
+            "isr_constraint_filter",
+            "constraint.runtime.filter",
+            "工业运行时约束过滤",
+            {"explain_all": False},
+        ),
+        ("ontology_graph_persist", "ontology.graph.persist", "本体对象图持久化", {"dry_run": True}),
+        ("semantic_relation_persist", "semantic.relation.persist", "语义关系持久化", {"dry_run": True}),
+        ("constraint_relation_persist", "constraint.relation.persist", "约束关系持久化", {"dry_run": True}),
+        (
+            "industrial_graph_persist",
+            "industrial.graph.persist",
+            "工业图谱持久化",
+            {
+                "graph_backend": "neo4j",
+                "namespace": "industrial_default",
+                "enable_native_labels": True,
+                "enable_typed_relationships": True,
+                "validation": True,
+                "batch_size": 100,
+                "dry_run": False,
+            },
+        ),
+        ("storage_persist", "storage.persist", "存储落盘", {}),
+        ("end", "workflow.end", "结束", {}),
+    ]
+    full_chain: List[Tuple[str, str, str, Dict[str, Any]]] = [
+        ("start", "workflow.start", "开始", {}),
+        *chunk_onward,
+    ]
+
+    start_x = 80
+    start_y = 720
+    step_x = 200
+    nodes: List[Dict[str, Any]] = []
+    for idx, (nid, ntype, label, cfg) in enumerate(full_chain):
+        nodes.append(_mk_node(nid, ntype, start_x + idx * step_x, start_y, label, cfg))
+
+    edges: List[Tuple[str, str]] = []
+    for i in range(len(full_chain) - 1):
+        edges.append((full_chain[i][0], full_chain[i + 1][0]))
+
+    desc = (
+        "从文本切片(chunk.split)起的本体建库+ISR尾巴；跳过 document.parse〜industrial.process_extract。"
+        "运行前请将 input_data 整段替换为某次完整跑完后 industrial.process_extract 节点 result.data "
+        "(含 routes/content_list/composite_structure 等)。"
+        "默认落盘/接口里 node_results 会缩略 routes；若需从 runs/*.json 直接拷贝，请在服务端 .env 设置 "
+        "WORKFLOW_RUN_STRIP_VISUAL_HEAVY=0 后再跑全链，或使用未经过缩略导出的快照。"
+    )
+    return _build_doc(
+        workflow_id="default-industrial-ontology-from-chunk-split",
+        name="本体建库（自 chunk.split 接入）",
+        description=desc,
+        nodes=nodes,
+        edges=edges,
+        entry_node_ids=["start"],
+        input_data={},
+    )
+
+
 def list_default_workflow_templates() -> List[Dict[str, str]]:
     return [
         {
@@ -637,6 +776,11 @@ def list_default_workflow_templates() -> List[Dict[str, str]]:
             "name": "本体对象建库默认工作流",
             "description": "工业图谱构建后串联 ontology / ISR 语义计划 / 约束过滤与三类 ontology 图谱持久化，再接 Neo4j 与存储",
         },
+        {
+            "template_id": "default-industrial-ontology-from-chunk-split",
+            "name": "本体建库（自 chunk.split 接入）",
+            "description": "从 chunk.split 起跳；input_data 需粘贴 industrial.process_extract 的 data；默认 run 会缩略 routes，需断点请设 WORKFLOW_RUN_STRIP_VISUAL_HEAVY=0",
+        },
     ]
 
 
@@ -657,4 +801,6 @@ def get_default_workflow_template(template_id: str) -> Dict[str, Any]:
         return build_default_entity_relation_extract_validation_with_industrial_workflow()
     if template_id == "default-industrial-ontology-object-library":
         return build_default_industrial_ontology_object_library_workflow()
+    if template_id == "default-industrial-ontology-from-chunk-split":
+        return build_default_industrial_ontology_from_chunk_split_workflow()
     raise KeyError(template_id)

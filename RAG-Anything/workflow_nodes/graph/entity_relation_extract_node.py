@@ -18,6 +18,22 @@ class EntityRelationExtractNode(BaseNode):
         return v if isinstance(v, list) else []
 
     @staticmethod
+    def _effective_max_chunks(config_value: Any) -> int | None:
+        """
+        None / 缺失 / ≤0 → 不按数量截断，处理本轮（过滤后）全部 chunks；
+        ≥1 → 至多处理这么多条。
+        """
+        if config_value is None:
+            return None
+        try:
+            n = int(config_value)
+        except (TypeError, ValueError):
+            return None
+        if n <= 0:
+            return None
+        return n
+
+    @staticmethod
     def _extract_llm_model_func(context: ExecutionContext) -> Any:
         # 1) context.shared_data.llm_model_func
         shared = context.shared_data if isinstance(context.shared_data, dict) else {}
@@ -82,7 +98,8 @@ class EntityRelationExtractNode(BaseNode):
                     label="最大处理 chunks 数",
                     type="number",
                     required=False,
-                    default=50,
+                    default=0,
+                    description="0（默认）或未设置：处理本轮 payload 内全部符合条件（过滤后）的 chunks；设为 ≥1 时截断为最前面的 N 条。",
                 ),
                 NodeConfigField(
                     name="use_llm_cache",
@@ -110,7 +127,7 @@ class EntityRelationExtractNode(BaseNode):
             )
 
         include_mm = bool(self.config.get("include_multimodal_chunks", True))
-        max_chunks = max(1, int(self.config.get("max_chunks") or 50))
+        chunk_cap = self._effective_max_chunks(self.config.get("max_chunks"))
         selected_chunks: list[dict[str, Any]] = []
         for one in chunks:
             t = str(one.get("content_type") or "").strip().lower()
@@ -118,7 +135,7 @@ class EntityRelationExtractNode(BaseNode):
             if (not include_mm) and is_mm:
                 continue
             selected_chunks.append(dict(one))
-            if len(selected_chunks) >= max_chunks:
+            if chunk_cap is not None and len(selected_chunks) >= chunk_cap:
                 break
         if not selected_chunks:
             return NodeResult(

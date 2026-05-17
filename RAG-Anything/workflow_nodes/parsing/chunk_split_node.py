@@ -11,6 +11,7 @@ from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 from runtime_kernel.runtime_state.content_access import ContentAccess
+from runtime_kernel.runtime_state.payload_slim import slim_chunk_split_outputs
 
 
 class ChunkSplitNode(BaseNode):
@@ -133,6 +134,116 @@ class ChunkSplitNode(BaseNode):
             return "equation_pipeline"
         return "text_pipeline"
 
+    @staticmethod
+    def _source_item_id_for_chunk(*, pipeline: str, idx: int, raw_item: dict[str, Any]) -> str:
+        """
+        与 industrial.process/graph 及对账逻辑对齐：优先 item_id/id，再用 block_id（MinerU/normalize 常与工业块同源），
+        最后才退化到 pipeline 内下标。
+        """
+        for k in ("item_id", "id", "block_id"):
+            v = raw_item.get(k)
+            if v is None:
+                continue
+            s = str(v).strip()
+            if s:
+                return s
+        return f"{pipeline}:{idx}"
+
+    @classmethod
+    def _ensure_mineru_layout_block_ids(cls, payload: dict[str, Any]) -> None:
+        """与 normalize_mineru_layout_blocks 一致：为每条 layout dict 补齐 block_id，便于 chunk.source_item_id 与工业实体对齐。"""
+        cl = cls._as_list(payload.get("content_list"))
+        for idx, raw in enumerate(cl, start=1):
+            if not isinstance(raw, dict):
+                continue
+            canonical = str(
+                raw.get("block_id") or raw.get("id") or raw.get("item_id") or f"mineru_block_{idx}"
+            ).strip()
+            if canonical:
+                raw.setdefault("block_id", canonical)
+
+    @classmethod
+    def _collect_chunk_items_from_semantic_blocks(
+        cls,
+        semantic_blocks: list[Any],
+        *,
+        skip_pipelines: set[str],
+    ) -> tuple[list[dict[str, Any]], list[str]]:
+        """优先消费 semantic.block.merge 产出的 semantic_blocks。"""
+        out: list[dict[str, Any]] = []
+        warnings: list[str] = []
+        for idx, raw in enumerate(semantic_blocks):
+            if not isinstance(raw, dict):
+                continue
+            pipeline = str(raw.get("pipeline") or raw.get("route_pipeline") or "text_pipeline").strip()
+            if pipeline in skip_pipelines:
+                continue
+            text = str(raw.get("merged_text") or "").strip()
+            if not text:
+                continue
+            content_type = str(raw.get("content_type") or "text").strip().lower() or "text"
+            md = raw.get("metadata") if isinstance(raw.get("metadata"), dict) else {}
+            source_ids = md.get("source_block_ids")
+            sid = ""
+            if isinstance(source_ids, list) and source_ids:
+                sid = str(source_ids[0]).strip()
+            if not sid:
+                sid = str(raw.get("semantic_block_id") or f"semantic:{idx}").strip()
+            page_range = raw.get("page_range") if isinstance(raw.get("page_range"), list) else []
+            page_idx = page_range[0] if page_range else None
+            source_blocks = raw.get("source_blocks") if isinstance(raw.get("source_blocks"), list) else []
+            all_block_ids: list[str] = []
+            if isinstance(source_ids, list):
+                for bid in source_ids:
+                    s = str(bid).strip()
+                    if s and s not in all_block_ids:
+                        all_block_ids.append(s)
+            for sb in source_blocks:
+                if not isinstance(sb, dict):
+                    continue
+                for rk in ("block_id", "item_id", "id"):
+                    v = sb.get(rk)
+                    if v is None:
+                        continue
+                    s = str(v).strip()
+                    if s and s not in all_block_ids:
+                        all_block_ids.append(s)
+            raw_item = {
+                "semantic_block_id": raw.get("semantic_block_id"),
+                "semantic_type": raw.get("semantic_type"),
+                "section_title": raw.get("section_title"),
+                "layout_types": raw.get("layout_types"),
+                "page_range": page_range,
+                "source_blocks": source_blocks,
+            }
+            if source_blocks and isinstance(source_blocks[0], dict):
+                first = source_blocks[0]
+                raw_item.setdefault("block_id", first.get("block_id"))
+                raw_item.setdefault("type", first.get("type"))
+            meta_out = {
+                **md,
+                "page_idx": page_idx,
+                "semantic_block_id": raw.get("semantic_block_id"),
+                "section_title": raw.get("section_title"),
+                "semantic_type": raw.get("semantic_type"),
+                "route_pipeline": pipeline,
+                "from_semantic_merge": True,
+                "source_block_ids": all_block_ids,
+            }
+            out.append(
+                {
+                    "pipeline": pipeline,
+                    "content_type": content_type,
+                    "text": text,
+                    "source_item_id": sid,
+                    "metadata": meta_out,
+                    "raw_item": raw_item,
+                }
+            )
+        if out:
+            warnings.append(f"chunk.split 使用 semantic_blocks（{len(out)} 条）")
+        return out, warnings
+
     @classmethod
     def _collect_chunk_items(
         cls,
@@ -140,6 +251,7 @@ class ChunkSplitNode(BaseNode):
         payload: dict[str, Any],
         include_multimodal_descriptions: bool,
         skip_pipelines: set[str],
+        prefer_semantic_blocks: bool = True,
     ) -> tuple[list[dict[str, Any]], list[str]]:
         routes = cls._as_dict(payload.get("routes"))
         content_list = cls._as_list(payload.get("content_list"))
@@ -149,6 +261,11 @@ class ChunkSplitNode(BaseNode):
         desc_idx = cls._build_desc_index(multimodal_descriptions)
         warnings: list[str] = []
         out: list[dict[str, Any]] = []
+
+        if prefer_semantic_blocks:
+            sb = payload.get("semantic_blocks")
+            if isinstance(sb, list) and sb:
+                return cls._collect_chunk_items_from_semantic_blocks(sb, skip_pipelines=skip_pipelines)
 
         def push_item(pipeline: str, raw_item: dict[str, Any], idx: int) -> None:
             if pipeline in skip_pipelines:
@@ -162,7 +279,7 @@ class ChunkSplitNode(BaseNode):
             ).strip()
             if not text:
                 return
-            sid = str(raw_item.get("item_id") or raw_item.get("id") or f"{pipeline}:{idx}")
+            sid = cls._source_item_id_for_chunk(pipeline=pipeline, idx=idx, raw_item=raw_item)
             out.append(
                 {
                     "pipeline": pipeline,
@@ -265,8 +382,19 @@ class ChunkSplitNode(BaseNode):
                     required=False,
                     default=["discard_pipeline"],
                 ),
+                NodeConfigField(
+                    name="prefer_semantic_blocks",
+                    label="优先 semantic_blocks",
+                    type="boolean",
+                    required=False,
+                    default=True,
+                    description="为 true 时优先读取 semantic.block.merge 产物，否则回退 routes/content_list。",
+                ),
             ],
-            input_schema={"type": "object", "description": "routes/content_list/multimodal_descriptions"},
+            input_schema={
+                "type": "object",
+                "description": "semantic_blocks / routes / content_list / multimodal_descriptions",
+            },
             output_schema={"type": "object", "description": "chunks/chunk_summary"},
         )
 
@@ -285,11 +413,20 @@ class ChunkSplitNode(BaseNode):
         split_by_character_only = bool(self.config.get("split_by_character_only", False))
         include_mm_desc = bool(self.config.get("include_multimodal_descriptions", True))
         skip_pipelines = {x.strip() for x in self._json_to_list(self.config.get("skip_pipelines")) if x.strip()}
+        prefer_semantic = bool(self.config.get("prefer_semantic_blocks", True))
+
+        self._ensure_mineru_layout_block_ids(payload)
+
+        if prefer_semantic and not payload.get("semantic_blocks"):
+            pool_blocks = ContentAccess.get_semantic_blocks(context, self.node_id)
+            if isinstance(pool_blocks, list) and pool_blocks:
+                payload["semantic_blocks"] = pool_blocks
 
         items, collect_warnings = self._collect_chunk_items(
             payload=payload,
             include_multimodal_descriptions=include_mm_desc,
             skip_pipelines=skip_pipelines,
+            prefer_semantic_blocks=prefer_semantic,
         )
         if not items:
             out_empty = dict(payload)
@@ -339,6 +476,7 @@ class ChunkSplitNode(BaseNode):
         out = dict(payload)
         out["chunks"] = chunks if isinstance(chunks, list) else []
         out["chunk_summary"] = summary
+        slim_chunk_split_outputs(out)
         ContentAccess.set_chunks(context, self.node_id, out["chunks"])
         context.log(
             f"[ChunkSplitNode] input_items={summary['input_items']} total_chunks={summary['total_chunks']} "

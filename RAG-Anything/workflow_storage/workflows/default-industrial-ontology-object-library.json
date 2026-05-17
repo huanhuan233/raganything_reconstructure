@@ -105,8 +105,8 @@
         "enable_semantic_completion": false
       },
       "position": {
-        "x": 1484,
-        "y": 98
+        "x": 1582,
+        "y": 266
       },
       "label": "工业结构识别"
     },
@@ -152,12 +152,14 @@
       "id": "chunk_split",
       "type": "chunk.split",
       "config": {
-        "chunk_token_size": 1200,
+        "chunk_token_size": 10000,
         "chunk_overlap_token_size": 100,
         "include_multimodal_descriptions": true,
         "skip_pipelines": [
           "discard_pipeline"
-        ]
+        ],
+        "split_by_character": "",
+        "split_by_character_only": false
       },
       "position": {
         "x": 2604,
@@ -187,7 +189,7 @@
         "entity_extract_max_gleaning": 1,
         "language": "auto",
         "include_multimodal_chunks": true,
-        "max_chunks": 200,
+        "max_chunks": 0,
         "use_llm_cache": false
       },
       "position": {
@@ -312,7 +314,7 @@
       "type": "industrial.graph.persist",
       "config": {
         "graph_backend": "neo4j",
-        "namespace": "ceshi05",
+        "namespace": "ceshi07",
         "enable_native_labels": true,
         "enable_typed_relationships": true,
         "validation": true,
@@ -333,12 +335,13 @@
         "vector_storage": {
           "backend": "milvus",
           "mode": "create",
-          "collection": "ceshi05",
+          "collection": "ceshi07",
           "dimension": 4096,
           "metric_type": "COSINE",
           "index_type": "IVF_FLAT",
           "auto_create_index": true,
-          "create_if_missing": true
+          "create_if_missing": true,
+          "milvus_batch_size": 50
         }
       },
       "position": {
@@ -356,6 +359,21 @@
         "y": 98
       },
       "label": "结束"
+    },
+    {
+      "id": "wf_jp_g0Y9Y",
+      "type": "semantic.block.merge",
+      "config": {
+        "semantic_merge_token_limit": 8000,
+        "require_same_page": true,
+        "protect_multimodal_boundaries": true,
+        "protect_industrial_boundaries": true
+      },
+      "position": {
+        "x": 1526,
+        "y": 28
+      },
+      "label": "语义块合并"
     }
   ],
   "edges": [
@@ -374,10 +392,6 @@
     [
       "multimodal_process",
       "content_route"
-    ],
-    [
-      "content_route",
-      "industrial_structure"
     ],
     [
       "industrial_structure",
@@ -450,6 +464,14 @@
     [
       "storage_persist",
       "end"
+    ],
+    [
+      "content_route",
+      "wf_jp_g0Y9Y"
+    ],
+    [
+      "wf_jp_g0Y9Y",
+      "industrial_structure"
     ]
   ],
   "entry_node_ids": [
@@ -459,5 +481,5 @@
     "source_path": "Inputs/3.pdf"
   },
   "created_at": "2026-05-16T12:01:56Z",
-  "updated_at": "2026-05-16T12:10:00Z"
+  "updated_at": "2026-05-17T07:41:05Z"
 }

@@ -26,6 +26,7 @@ class ExecutionPhase(str, Enum):
 
 CONTENT_BUCKETS: tuple[str, ...] = (
     "parsed_document",
+    "semantic_blocks",
     "chunks",
     "multimodal_blocks",
     "embeddings",

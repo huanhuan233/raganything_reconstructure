@@ -8,6 +8,7 @@ from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 from runtime_kernel.node_runtime.base_node import BaseNode
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
 
 from ..models.semantic_execution_plan import SemanticDependency, SemanticExecutionPlan
 
@@ -43,11 +44,12 @@ class IndustrialSemanticRuntimePlanNode(BaseNode):
         )
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
-        payload = dict(input_data) if isinstance(input_data, dict) else {}
+        base = dict(input_data) if isinstance(input_data, dict) else {}
+        payload = slim_semantic_carry_payload(base)
 
-        objs = payload.get("ontology_objects") or context.content_pool.get("ontology_objects") or []
-        cons = payload.get("constraints") or context.content_pool.get("constraints") or []
-        filt = payload.get("industrial_filtered") or context.content_pool.get("industrial_filtered") or {}
+        objs = base.get("ontology_objects") or context.content_pool.get("ontology_objects") or []
+        cons = base.get("constraints") or context.content_pool.get("constraints") or []
+        filt = base.get("industrial_filtered") or context.content_pool.get("industrial_filtered") or {}
 
         valid_only = filt.get("valid_objects") if isinstance(filt, dict) else None
         if isinstance(valid_only, list) and valid_only:

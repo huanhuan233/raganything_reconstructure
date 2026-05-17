@@ -17,6 +17,8 @@ from ..models.constraint_object import (
     ConstraintObject,
     PredicatePayload,
 )
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
+
 from ..utils import merge_named_bucket_models
 
 
@@ -158,13 +160,14 @@ class IndustrialConstraintSemanticExtractNode(BaseNode):
         )
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
-        payload = dict(input_data) if isinstance(input_data, dict) else {}
-        corpus = _gather_corpus(payload, context)
+        base_view = dict(input_data) if isinstance(input_data, dict) else {}
+        corpus = _gather_corpus(base_view, context)
         if not corpus.strip():
+            slim_err = slim_semantic_carry_payload(base_view)
             return NodeResult(
                 success=False,
                 error="constraint.extract requires non-empty corpus",
-                data=payload,
+                data=slim_err,
             )
 
         new_objs = heuristic_extract_constraints(corpus)
@@ -172,9 +175,10 @@ class IndustrialConstraintSemanticExtractNode(BaseNode):
         merged = merge_named_bucket_models(context, "constraints", as_dicts, id_key="constraint_id")
         context.constraint_state.register_active(as_dicts)
 
-        payload["constraints"] = merged
-        payload["constraint_extract_preview"] = corpus[:512]
-        return NodeResult(success=True, data=payload, metadata={"count": len(merged)})
+        out = slim_semantic_carry_payload(base_view)
+        out["constraints"] = merged
+        out["constraint_extract_preview"] = corpus[:512]
+        return NodeResult(success=True, data=out, metadata={"count": len(merged)})
 
     def build_node_output(self, result: NodeResult, context: ExecutionContext):
         out = super().build_node_output(result, context)

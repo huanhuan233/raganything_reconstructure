@@ -18,6 +18,8 @@ from runtime_kernel.entities.node_result import NodeResult
 from runtime_kernel.runtime_state.content_access import ContentAccess
 from runtime_kernel.runtime_state.variable_access import VariableAccess
 
+from workflow_api.run_store import checkpoint_storage_dir
+
 def _env_embed_provider() -> str:
     return (os.getenv("EMBEDDING_BINDING") or "default").strip() or "default"
 
@@ -41,10 +43,7 @@ class EmbeddingIndexNode(BaseNode):
 
     @staticmethod
     def _trace_path(run_id: str, suffix: str) -> Path:
-        root = Path(__file__).resolve().parents[2]
-        out_dir = root / "backend_api" / "storage" / "runs"
-        out_dir.mkdir(parents=True, exist_ok=True)
-        return out_dir / f"{run_id}_{suffix}.jsonl"
+        return checkpoint_storage_dir() / f"{run_id}_{suffix}.jsonl"
 
     @classmethod
     def _append_trace(cls, run_id: str, suffix: str, record: dict[str, Any]) -> None:
@@ -58,11 +57,8 @@ class EmbeddingIndexNode(BaseNode):
 
     @staticmethod
     def _checkpoint_path(cache_key: str) -> Path:
-        root = Path(__file__).resolve().parents[2]
-        out_dir = root / "backend_api" / "storage" / "runs"
-        out_dir.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha1(cache_key.encode("utf-8")).hexdigest()[:16]
-        return out_dir / f"embedding_{digest}_checkpoint.jsonl"
+        return checkpoint_storage_dir() / f"embedding_{digest}_checkpoint.jsonl"
 
     @classmethod
     def _load_embedding_checkpoint(cls, cache_key: str) -> dict[str, dict[str, Any]]:

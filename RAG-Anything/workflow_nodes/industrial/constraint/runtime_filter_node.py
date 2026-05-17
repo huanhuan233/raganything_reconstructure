@@ -9,6 +9,7 @@ from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 from runtime_kernel.node_runtime.base_node import BaseNode
 from runtime_kernel.runtime_state.runtime_constraint import RuntimeConstraintEngine
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
 
 from .constraint_engine_bridge import coerce_constraint_records
 
@@ -34,14 +35,14 @@ class IndustrialConstraintRuntimeFilterNode(BaseNode):
         )
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
-        payload = dict(input_data) if isinstance(input_data, dict) else {}
+        base = dict(input_data) if isinstance(input_data, dict) else {}
 
-        objs = payload.get("ontology_objects") or context.content_pool.get("ontology_objects") or []
+        objs = base.get("ontology_objects") or context.content_pool.get("ontology_objects") or []
         if not isinstance(objs, list):
             objs = []
 
         cands_raw: list[Any] = list(objs)
-        cand_proc = payload.get("candidate_plan") or payload.get("candidate_process_plan")
+        cand_proc = base.get("candidate_plan") or base.get("candidate_process_plan")
         if isinstance(cand_proc, list):
             cands_raw.extend([p for p in cand_proc if isinstance(p, dict)])
 
@@ -52,7 +53,7 @@ class IndustrialConstraintRuntimeFilterNode(BaseNode):
             elif isinstance(c, dict):
                 cands_dump.append(dict(c))
 
-        con_raw = payload.get("constraints") or context.content_pool.get("constraints") or []
+        con_raw = base.get("constraints") or context.content_pool.get("constraints") or []
         if not isinstance(con_raw, list):
             con_raw = []
         merged_rules_src = [*con_raw, *(context.runtime_constraints or [])]
@@ -78,7 +79,9 @@ class IndustrialConstraintRuntimeFilterNode(BaseNode):
         digest = engine.explain(explanations)
         filt_block = {"valid_objects": valid, "rejected_objects": rejected}
 
-        retrieval = payload.get("candidate_retrieval_results")
+        payload = slim_semantic_carry_payload(base)
+
+        retrieval = base.get("candidate_retrieval_results")
         if retrieval is not None:
             filt_retrieval = retrieval if isinstance(retrieval, list) else []
             payload["candidate_retrieval_results_filtered"] = [x for x in filt_retrieval if isinstance(x, dict)]

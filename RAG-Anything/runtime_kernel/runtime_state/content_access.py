@@ -61,6 +61,14 @@ class ContentAccess:
         return cls._set(context, node_id, "chunks", value)
 
     @classmethod
+    def get_semantic_blocks(cls, context: "ExecutionContext", node_id: str) -> Any:
+        return cls._get(context, node_id, "semantic_blocks", default=[])
+
+    @classmethod
+    def set_semantic_blocks(cls, context: "ExecutionContext", node_id: str, value: Any) -> Any:
+        return cls._set(context, node_id, "semantic_blocks", value)
+
+    @classmethod
     def get_embeddings(cls, context: "ExecutionContext", node_id: str) -> Any:
         return cls._get(context, node_id, "embeddings", default=[])
 

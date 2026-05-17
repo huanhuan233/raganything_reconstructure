@@ -8,6 +8,7 @@ from runtime_kernel.node_runtime.base_node import BaseNode
 from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
 
 
 class IndustrialGraphPersistNode(BaseNode):
@@ -91,8 +92,8 @@ class IndustrialGraphPersistNode(BaseNode):
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
         if not isinstance(input_data, dict):
             return NodeResult(success=False, error="industrial.graph.persist expects dict input")
-        payload = dict(input_data)
-        graph = payload.get("industrial_graph")
+        payload = slim_semantic_carry_payload(input_data)
+        graph = payload.get("industrial_graph") or input_data.get("industrial_graph")
         if not isinstance(graph, dict):
             return NodeResult(success=False, error="industrial.graph.persist requires industrial_graph", data=payload)
 
@@ -138,6 +139,7 @@ class IndustrialGraphPersistNode(BaseNode):
             )
 
         out = dict(payload)
+        out["industrial_graph"] = graph
         out["industrial_graph_persist_summary"] = persisted.get("industrial_graph_persist_summary", {})
         out["storage_refs"] = persisted.get("storage_refs", [])
         warnings = list(persisted.get("warnings", []))

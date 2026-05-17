@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
 import time
 import uuid
 from datetime import datetime, timezone
@@ -14,6 +16,7 @@ from runtime_kernel.graph_engine.workflow_runner import WorkflowRunner
 from runtime_kernel.graph.workflow_schema import WorkflowSchema
 from runtime_kernel.node_runtime.node_registry import get_default_registry
 from runtime_kernel.entities.node_result import NodeResult
+from runtime_kernel.runtime_state.payload_slim import strip_visual_heavy_for_export
 
 from .raganything_runtime import build_adapters_for_request
 from . import run_store
@@ -82,6 +85,16 @@ def strip_vector_floats_for_storage(value: Any, *, key: str | None = None) -> An
     return str(value)
 
 
+def _should_strip_visual_heavy_for_run_export() -> bool:
+    """
+    落盘 / HTTP 的 node_results 默认会缩略 routes 等大字段以减小体积。
+    若需将完整 data 写入 runs/*.json（例如复制给「自 chunk.split 起跑」的 input_data），在 .env 设：
+    WORKFLOW_RUN_STRIP_VISUAL_HEAVY=0
+    """
+    v = str(os.getenv("WORKFLOW_RUN_STRIP_VISUAL_HEAVY", "1") or "1").strip().lower()
+    return v not in {"0", "false", "no", "off"}
+
+
 def _serialize_node_results(
     raw: Dict[str, NodeResult],
 ) -> Dict[str, SerializedNodeResult]:
@@ -105,6 +118,8 @@ def _serialize_node_results(
     for nid, nr in raw.items():
         meta = dict(nr.metadata or {})
         data_stripped = strip_vector_floats_for_storage(nr.data)
+        if _should_strip_visual_heavy_for_run_export():
+            data_stripped = strip_visual_heavy_for_export(data_stripped)
         out[nid] = SerializedNodeResult(
             success=nr.success,
             data=_sanitize(data_stripped),
@@ -331,6 +346,7 @@ async def run_workflow(request: WorkflowRunRequest) -> WorkflowRunResponse:
         except Exception:  # noqa: BLE001
             pass
 
+    resp: WorkflowRunResponse | None = None
     try:
         adapters = await build_adapters_for_request(request)
         ctx = ExecutionContext(
@@ -512,6 +528,25 @@ async def run_workflow(request: WorkflowRunRequest) -> WorkflowRunResponse:
             node_results=node_results,
             logs=list(ctx.logs),
         )
+    except asyncio.CancelledError:
+        _publish_event(
+            "run_error",
+            {
+                "run_id": run_id,
+                "workflow_id": request.workflow_id,
+                "error": "workflow run cancelled (interrupted)",
+            },
+        )
+        resp = WorkflowRunResponse(
+            success=False,
+            workflow_id=request.workflow_id,
+            run_id=run_id,
+            error="workflow run cancelled (interrupted)",
+            failed_node_id=None,
+            node_results={},
+            logs=list(ctx.logs) if ctx is not None else [],
+        )
+        raise
     except Exception as exc:  # noqa: BLE001
         _publish_event(
             "run_error",
@@ -531,6 +566,16 @@ async def run_workflow(request: WorkflowRunRequest) -> WorkflowRunResponse:
             logs=list(ctx.logs) if ctx is not None else [],
         )
     finally:
+        if resp is None:
+            resp = WorkflowRunResponse(
+                success=False,
+                workflow_id=request.workflow_id,
+                run_id=run_id,
+                error="workflow run ended without response (internal)",
+                failed_node_id=None,
+                node_results={},
+                logs=list(ctx.logs) if ctx is not None else [],
+            )
         finished_at = _utc_iso()
         duration_ms = int((time.perf_counter() - t0) * 1000)
         nr_json = {k: v.model_dump(mode="json") for k, v in resp.node_results.items()}

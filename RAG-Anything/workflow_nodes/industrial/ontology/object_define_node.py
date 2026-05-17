@@ -11,6 +11,8 @@ from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 
 from ..models.ontology_object import OntologyObject, OntologyObjectType
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
+
 from ..utils import merge_named_bucket_models
 
 
@@ -85,12 +87,12 @@ class OntologyObjectDefineNode(BaseNode):
         if not isinstance(refs, list):
             refs = []
 
-        payload_in = dict(input_data) if isinstance(input_data, dict) else {}
+        payload_base = dict(input_data) if isinstance(input_data, dict) else {}
 
         obj = OntologyObject(
             object_id=oid,
             ontology_type=ot,
-            label=str(self.config.get("label") or payload_in.get("label") or ot.value),
+            label=str(self.config.get("label") or payload_base.get("label") or ot.value),
             attributes={str(k): v for k, v in attrs.items()},
             source_refs=[str(r) for r in refs],
         )
@@ -99,7 +101,7 @@ class OntologyObjectDefineNode(BaseNode):
 
         context.ontology_state.upsert_object(oid, dumped, node_id=self.node_id)
 
-        payload = dict(payload_in)
+        payload = slim_semantic_carry_payload(payload_base)
         payload["ontology_objects"] = merged
         payload["ontology_object"] = dumped
 

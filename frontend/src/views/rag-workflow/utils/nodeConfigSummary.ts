@@ -92,6 +92,8 @@ export function summarizeNodeConfig(data: RagFlowNodeData): string {
     if (vs.backend === 'milvus' && String(vs.collection || '').trim()) {
       backends.push('milvus');
       parts.push(`Milvus:${String(vs.collection).trim()}`);
+      const bs = Number(vs.milvus_batch_size);
+      if (Number.isFinite(bs) && bs >= 1) parts.push(`批量:${Math.floor(bs)}`);
     }
     backends.push('local_jsonl');
     const segs: string[] = [];

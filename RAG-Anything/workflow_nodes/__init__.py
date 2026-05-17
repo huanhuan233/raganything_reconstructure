@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from runtime_kernel.node_runtime.node_registry import get_default_registry
 from .parsing.chunk_split_node import ChunkSplitNode
+from .parsing.semantic_block_merge_node import SemanticBlockMergeNode
 from .parsing.content_filter_node import ContentFilterNode
 from .parsing.content_normalize_node import ContentNormalizeNode
 from .parsing.document_parse_node import DocumentParseNode
@@ -48,6 +49,7 @@ def register_builtin_nodes() -> None:
     reg.register("content.normalize", ContentNormalizeNode)
     reg.register("content.filter", ContentFilterNode)
     reg.register("content.route", ContentRouteNode)
+    reg.register("semantic.block.merge", SemanticBlockMergeNode)
     reg.register("chunk.split", ChunkSplitNode)
     reg.register("entity_relation.extract", EntityRelationExtractNode)
     reg.register("embedding.index", EmbeddingIndexNode)
@@ -87,6 +89,7 @@ __all__ = [
     "DocStatusUpdateNode",
     "ContentFilterNode",
     "ContentRouteNode",
+    "SemanticBlockMergeNode",
     "ContentNormalizeNode",
     "EmbeddingIndexNode",
     "EntityRelationExtractNode",

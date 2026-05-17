@@ -24,6 +24,8 @@ from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 
+from workflow_api.run_store import checkpoint_storage_dir
+
 
 class MultimodalProcessNode(BaseNode):
     """对非 text 内容做多模态理解，产出可检索描述文本。"""
@@ -256,10 +258,7 @@ class MultimodalProcessNode(BaseNode):
 
     @staticmethod
     def _vlm_trace_path(run_id: str) -> Path:
-        root = Path(__file__).resolve().parents[2]
-        out_dir = root / "backend_api" / "storage" / "runs"
-        out_dir.mkdir(parents=True, exist_ok=True)
-        return out_dir / f"{run_id}_vlm.jsonl"
+        return checkpoint_storage_dir() / f"{run_id}_vlm.jsonl"
 
     @classmethod
     def _append_vlm_trace(cls, run_id: str, record: dict[str, Any]) -> None:
@@ -274,11 +273,8 @@ class MultimodalProcessNode(BaseNode):
 
     @staticmethod
     def _checkpoint_path(cache_key: str) -> Path:
-        root = Path(__file__).resolve().parents[2]
-        out_dir = root / "backend_api" / "storage" / "runs"
-        out_dir.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha1(cache_key.encode("utf-8")).hexdigest()[:16]
-        return out_dir / f"multimodal_{digest}_checkpoint.jsonl"
+        return checkpoint_storage_dir() / f"multimodal_{digest}_checkpoint.jsonl"
 
     @classmethod
     def _load_checkpoint(cls, cache_key: str) -> dict[int, dict[str, Any]]:

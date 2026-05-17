@@ -78,19 +78,25 @@ export async function uploadRagWorkflowSource(file: File) {
 
 /** 保存画布到服务端 ``POST /api/workflows/save``。 */
 export function fetchRagWorkflowSave(payload: RagWorkflowSavePayload) {
-  return ragWorkflowRequest<RagWorkflowStoredDocument>({ url: '/api/workflows/save', method: 'post', data: payload });
+  return ragWorkflowRequest<RagWorkflowStoredDocument>({
+    url: '/api/workflows/save',
+    method: 'post',
+    data: payload,
+    timeout: 60000
+  });
 }
 
 /** 已保存工作流列表 ``GET /api/workflows``。 */
 export function fetchRagWorkflowList() {
-  return ragWorkflowRequest<RagWorkflowListResponse>({ url: '/api/workflows', method: 'get' });
+  return ragWorkflowRequest<RagWorkflowListResponse>({ url: '/api/workflows', method: 'get', timeout: 30000 });
 }
 
 /** 读取单个工作流 ``GET /api/workflows/{workflow_id}``。 */
 export function fetchRagWorkflowGet(workflowId: string) {
   return ragWorkflowRequest<RagWorkflowStoredDocument>({
     url: `/api/workflows/${encodeURIComponent(workflowId)}`,
-    method: 'get'
+    method: 'get',
+    timeout: 30000
   });
 }
 
@@ -106,7 +112,8 @@ export function fetchRagWorkflowDelete(workflowId: string) {
 export function fetchRagWorkflowTemplates() {
   return ragWorkflowRequest<RagWorkflowTemplateSummary[]>({
     url: '/api/workflows/templates',
-    method: 'get'
+    method: 'get',
+    timeout: 30000
   });
 }
 
@@ -114,7 +121,8 @@ export function fetchRagWorkflowTemplates() {
 export function fetchRagWorkflowTemplateGet(templateId: string) {
   return ragWorkflowRequest<RagWorkflowStoredDocument>({
     url: `/api/workflows/templates/${encodeURIComponent(templateId)}`,
-    method: 'get'
+    method: 'get',
+    timeout: 30000
   });
 }
 

@@ -21,9 +21,15 @@ CONTENT_LIFECYCLE_REGISTRY: list[ContentLifecycleItem] = [
         lifecycle_stage="document_parsed",
     ),
     ContentLifecycleItem(
+        content_name="semantic_blocks",
+        producer_node="semantic.block.merge",
+        consumer_nodes=["chunk.split"],
+        lifecycle_stage="semantic_merged",
+    ),
+    ContentLifecycleItem(
         content_name="chunks",
         producer_node="chunk.split",
-        consumer_nodes=["embedding.index"],
+        consumer_nodes=["embedding.index", "entity_relation.extract"],
         lifecycle_stage="chunked",
     ),
     ContentLifecycleItem(

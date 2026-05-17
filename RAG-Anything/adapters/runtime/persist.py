@@ -284,45 +284,61 @@ class _MilvusSession:
 
     def upsert_record(self, collection_name: str, rec: dict[str, Any], vec: list[float]) -> tuple[str, str | None, str | None]:
         """Returns (status, warning, error)."""
-        rid = str(rec.get("record_id", ""))
-        pipeline = str(rec.get("pipeline", ""))
-        ctype = str(rec.get("content_type", ""))
-        text = str(rec.get("text", ""))[:_MILVUS_TEXT_MAX]
-        dim = len(vec)
+        out = self.upsert_records_batch(collection_name, [(rec, vec)])
+        return out[0] if out else ("failed", None, "empty outcome")
+
+    def upsert_records_batch(
+        self, collection_name: str, batch: list[tuple[dict[str, Any], list[float]]]
+    ) -> list[tuple[str, str | None, str | None]]:
+        """多条一并写入 Milvus，末尾单次 flush；返回与 batch 等长的逐条状态。"""
+        n = len(batch)
+        if n == 0:
+            return []
+        dim = len(batch[0][1])
+        for _, vec in batch[1:]:
+            if len(vec) != dim:
+                msg = "Milvus batch 内向量维度不一致"
+                return [("failed", None, msg)] * n
 
         coll, err = self._ensure_collection(collection_name, dim)
         if err:
-            return "skipped", err, None
+            return [("skipped", err, None)] * n
         if coll is None:
-            return "failed", None, err or "unknown"
+            return [("failed", None, err or "unknown")] * n
+
+        rows: list[dict[str, Any]] = []
+        rids: list[str] = []
+        pipes: list[str] = []
+        ctypes: list[str] = []
+        texts: list[str] = []
+        vecs: list[list[float]] = []
+        for rec, vec in batch:
+            rid = str(rec.get("record_id", ""))
+            pipeline = str(rec.get("pipeline", ""))
+            ctype = str(rec.get("content_type", ""))
+            text = str(rec.get("text", ""))[:_MILVUS_TEXT_MAX]
+            rows.append(
+                {"record_id": rid, "pipeline": pipeline, "content_type": ctype, "text": text, "vector": vec}
+            )
+            rids.append(rid)
+            pipes.append(pipeline)
+            ctypes.append(ctype)
+            texts.append(text)
+            vecs.append(vec)
 
         try:
-            safe_rid = rid.replace('"', "").replace("\\", "")
-            expr = f'record_id == "{safe_rid}"'
-            row = {
-                "record_id": rid,
-                "pipeline": pipeline,
-                "content_type": ctype,
-                "text": text,
-                "vector": vec,
-            }
             if hasattr(coll, "upsert"):
-                coll.upsert([row])
+                coll.upsert(rows)
             else:
-                coll.delete(expr)
-                coll.insert(
-                    [
-                        [rid],
-                        [pipeline],
-                        [ctype],
-                        [text],
-                        [vec],
-                    ]
-                )
+                for rid in rids:
+                    safe_rid = rid.replace('"', "").replace("\\", "")
+                    expr = f'record_id == "{safe_rid}"'
+                    coll.delete(expr)
+                coll.insert([rids, pipes, ctypes, texts, vecs])
             coll.flush()
-            return "stored", None, None
+            return [("stored", None, None)] * n
         except Exception as exc:  # noqa: BLE001
-            return "failed", None, str(exc)
+            return [("failed", None, str(exc))] * n
 
 
 class _Neo4jSession:
@@ -467,6 +483,63 @@ class _MinioSession:
             return "failed", None, str(exc)
 
 
+class _MilvusPendingBuffers:
+    """按 collection + 向量维度分组缓冲，凑满 batch_size 再 upsert + flush。"""
+
+    def __init__(self, milvus: _MilvusSession, batch_size: int, log: LogFn) -> None:
+        self._milvus = milvus
+        self._batch_size = max(1, int(batch_size))
+        self._log = log
+        self._buckets: dict[tuple[str, int], list[tuple[dict[str, Any], list[float]]]] = {}
+        self._milvus_batch_ops = 0
+
+    def add(
+        self, coll: str, rec: dict[str, Any], vec: list[float]
+    ) -> list[tuple[str, str | None, str | None, str, str, str]]:
+        """返回本轮因凑满批次而已完成写入的逐条结果 (status, warn, err, rid, pipeline, coll)。"""
+        dim = len(vec)
+        key = (coll, dim)
+        bucket = self._buckets.setdefault(key, [])
+        bucket.append((rec, vec))
+        done: list[tuple[str, str | None, str | None, str, str, str]] = []
+        while len(bucket) >= self._batch_size:
+            chunk = bucket[: self._batch_size]
+            del bucket[: self._batch_size]
+            done.extend(self._flush_chunk(coll, chunk))
+        return done
+
+    def flush_all(self) -> list[tuple[str, str | None, str | None, str, str, str]]:
+        done: list[tuple[str, str | None, str | None, str, str, str]] = []
+        for key in list(self._buckets.keys()):
+            coll, _dim = key
+            bucket = self._buckets.pop(key, [])
+            for i in range(0, len(bucket), self._batch_size):
+                chunk = bucket[i : i + self._batch_size]
+                done.extend(self._flush_chunk(coll, chunk))
+        return done
+
+    def _flush_chunk(
+        self, coll: str, chunk: list[tuple[dict[str, Any], list[float]]]
+    ) -> list[tuple[str, str | None, str | None, str, str, str]]:
+        self._milvus_batch_ops += 1
+        op = self._milvus_batch_ops
+        self._log(f"[storage.persist] Milvus batch upsert start batch_op={op} size={len(chunk)} collection={coll}")
+        outcomes = self._milvus.upsert_records_batch(coll, chunk)
+        self._log(f"[storage.persist] Milvus batch upsert done batch_op={op} collection={coll}")
+        merged: list[tuple[str, str | None, str | None, str, str, str]] = []
+        for (rec, _vec), (status, warn, err) in zip(chunk, outcomes):
+            rid = str(rec.get("record_id", ""))
+            pipeline = str(rec.get("pipeline", ""))
+            merged.append((status, warn, err, rid, pipeline, coll))
+            if status != "stored":
+                self._log(
+                    f"[storage.persist] Milvus row batch_op={op} record_id={rid} collection={coll} status={status}"
+                    + (f" warning={warn}" if warn else "")
+                    + (f" error={err}" if err else "")
+                )
+        return merged
+
+
 def persist_embedding_records(
     embedding_records: list[dict[str, Any]],
     *,
@@ -474,6 +547,7 @@ def persist_embedding_records(
     create_if_missing: bool = False,
     workspace: str = "",
     log: LogFn | None = None,
+    milvus_batch_size: int = 50,
 ) -> dict[str, Any]:
     """
     执行多后端持久化。
@@ -482,14 +556,17 @@ def persist_embedding_records(
         ``{"storage_refs": [...], "storage_summary": {...}}``
     """
     lg = log or _noop_log
+    bs = int(milvus_batch_size)
+    if bs < 1:
+        bs = 50
     strategy = _merge_strategy(storage_strategy)
     total_records = len([x for x in embedding_records if isinstance(x, dict)])
 
     refs: list[dict[str, Any]] = []
     milvus = _MilvusSession(create_if_missing=create_if_missing, log=lg)
+    milvus_buffers = _MilvusPendingBuffers(milvus, bs, lg)
     minio = _MinioSession(log=lg)
     rec_idx = 0
-    milvus_op_idx = 0
 
     try:
         for rec in embedding_records:
@@ -585,31 +662,19 @@ def persist_embedding_records(
                             )
                         )
                         continue
-                    milvus_op_idx += 1
-                    lg(
-                        "[storage.persist] Milvus upsert start "
-                        f"record={rec_idx}/{total_records} milvus_op={milvus_op_idx} "
-                        f"record_id={rid} collection={coll} vector_dim={len(vec_list)}"
-                    )
-                    status, warn, err = milvus.upsert_record(coll, rec, vec_list)
-                    lg(
-                        "[storage.persist] Milvus upsert done "
-                        f"record={rec_idx}/{total_records} milvus_op={milvus_op_idx} "
-                        f"record_id={rid} collection={coll} status={status}"
-                        + (f" warning={warn}" if warn else "")
-                        + (f" error={err}" if err else "")
-                    )
-                    refs.append(
-                        _new_ref(
-                            record_id=rid,
-                            pipeline=pipeline,
-                            backend="milvus",
-                            target=coll,
-                            status=status,
-                            warning=warn,
-                            error=err,
+                    flushed = milvus_buffers.add(coll, rec, vec_list)
+                    for status, warn, err, rid_flush, pipe_flush, coll_flush in flushed:
+                        refs.append(
+                            _new_ref(
+                                record_id=rid_flush,
+                                pipeline=pipe_flush,
+                                backend="milvus",
+                                target=coll_flush,
+                                status=status,
+                                warning=warn,
+                                error=err,
+                            )
                         )
-                    )
                 elif backend == "neo4j":
                     neo_db = str(step.get("database") or "").strip() or "default"
                     neo_gp = _normalize_graph_partition(step.get("graph_partition"))
@@ -666,6 +731,23 @@ def persist_embedding_records(
                         )
                     )
     finally:
+        try:
+            pending_done = milvus_buffers.flush_all()
+        except Exception as exc:  # noqa: BLE001
+            lg(f"[storage.persist] Milvus 收尾批量写入失败: {exc}")
+            pending_done = []
+        for status, warn, err, rid_flush, pipe_flush, coll_flush in pending_done:
+            refs.append(
+                _new_ref(
+                    record_id=rid_flush,
+                    pipeline=pipe_flush,
+                    backend="milvus",
+                    target=coll_flush,
+                    status=status,
+                    warning=warn,
+                    error=err,
+                )
+            )
         milvus.close()
         minio.close()
 
@@ -682,5 +764,6 @@ def persist_embedding_records(
         "total_records": total_records,
         "refs_total": len(refs),
         "by_status": by_status,
+        "milvus_batch_size": bs,
     }
     return {"storage_refs": refs, "storage_summary": summary}

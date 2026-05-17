@@ -16,6 +16,13 @@ _RUN_ID_PATTERN = re.compile(r"^[a-f0-9]{16}$")
 _STORAGE_ROOT = Path(__file__).resolve().parents[1] / "workflow_storage" / "runs"
 
 
+def checkpoint_storage_dir() -> Path:
+    """与 ``multimodal.process`` / ``embedding.index`` 断点一致的目录（backend_api/storage/runs）。"""
+    d = Path(__file__).resolve().parents[1] / "backend_api" / "storage" / "runs"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def storage_dir() -> Path:
     d = _STORAGE_ROOT
     d.mkdir(parents=True, exist_ok=True)
@@ -119,7 +126,8 @@ def list_summaries(workflow_id: Optional[str] = None) -> List[Dict[str, Any]]:
 
 def delete_resume_checkpoints(cache_key: str, scope: str = "all") -> Dict[str, Any]:
     """
-    按 ``resume_cache_key`` 清理断点缓存文件。
+    按 ``resume_cache_key`` 清理断点缓存文件（与 multimodal / embedding 节点写入目录一致：
+    ``backend_api/storage/runs``）。
 
     scope:
     - ``all``: 删除 multimodal + embedding checkpoint
@@ -135,7 +143,7 @@ def delete_resume_checkpoints(cache_key: str, scope: str = "all") -> Dict[str, A
 
     digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
     targets: List[Path] = []
-    base = storage_dir()
+    base = checkpoint_storage_dir()
     if scope_norm in {"all", "multimodal"}:
         targets.append(base / f"multimodal_{digest}_checkpoint.jsonl")
     if scope_norm in {"all", "embedding"}:

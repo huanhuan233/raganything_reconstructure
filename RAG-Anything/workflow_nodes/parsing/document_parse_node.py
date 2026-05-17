@@ -64,6 +64,17 @@ class DocumentParseNode(BaseNode):
                     description="对可分页文档生效（PDF/Office/Text）；按 N 页分批解析后合并回单一完整 parse_result（默认 2）。",
                 ),
                 NodeConfigField(
+                    name="output_dir",
+                    label="MinerU 输出目录",
+                    type="path",
+                    required=False,
+                    default="",
+                    description=(
+                        "固定到同一目录可在「同 PDF + 同 parse_method/pages_per_split」下复用分批产物与 checkpoint，"
+                        "跳过重跑的 MinerU 子批次；留空则用项目默认 output + 文件名派生子目录。"
+                    ),
+                ),
+                NodeConfigField(
                     name="doc_id",
                     label="文档 ID",
                     type="string",

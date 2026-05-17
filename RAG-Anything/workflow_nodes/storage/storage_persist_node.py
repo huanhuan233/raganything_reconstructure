@@ -10,6 +10,7 @@ from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 from adapters.runtime.persist import persist_embedding_records
 from adapters.runtime.ui_strategy import ensure_storage_resources, resolve_strategy_from_node_config
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
 
 _DEFAULT_VECTOR_STORAGE: dict[str, Any] = {
     "backend": "milvus",
@@ -20,6 +21,7 @@ _DEFAULT_VECTOR_STORAGE: dict[str, Any] = {
     "index_type": "IVF_FLAT",
     "auto_create_index": True,
     "create_if_missing": False,
+    "milvus_batch_size": 50,
 }
 
 class StoragePersistNode(BaseNode):
@@ -41,7 +43,7 @@ class StoragePersistNode(BaseNode):
                     type="json",
                     required=False,
                     default=_DEFAULT_VECTOR_STORAGE,
-                    description="由编排前端写入：milvus collection / 新建参数等",
+                    description="由编排前端写入：milvus collection / 新建参数 / milvus_batch_size（批量写入条数）等",
                 ),
             ],
             input_schema={"type": "object", "description": "含 embedding_records / embedding_summary"},
@@ -62,13 +64,22 @@ class StoragePersistNode(BaseNode):
             return NodeResult(success=False, error="embedding_records 必须为 list")
 
         cfg = dict(self.config or {})
+        vs = cfg.get("vector_storage") if isinstance(cfg.get("vector_storage"), dict) else {}
+        milvus_batch_raw = vs.get("milvus_batch_size", 50)
+        try:
+            milvus_batch_size = int(milvus_batch_raw)
+        except (TypeError, ValueError):
+            milvus_batch_size = 50
+        if milvus_batch_size < 1:
+            milvus_batch_size = 50
         try:
             ensure_storage_resources(cfg, log=context.log)
             strategy, create_if_missing = resolve_strategy_from_node_config(cfg)
         except Exception as exc:  # noqa: BLE001
             return NodeResult(success=False, error=f"storage.persist 准备存储资源失败: {exc}")
 
-        out = dict(input_data)
+        out = slim_semantic_carry_payload(input_data)
+        out["embedding_records"] = records
         try:
             persisted = persist_embedding_records(
                 [r for r in records if isinstance(r, dict)],
@@ -76,6 +87,7 @@ class StoragePersistNode(BaseNode):
                 create_if_missing=create_if_missing,
                 workspace=context.workspace or "",
                 log=context.log,
+                milvus_batch_size=milvus_batch_size,
             )
         except Exception as exc:  # noqa: BLE001
             return NodeResult(success=False, error=f"storage.persist 执行异常: {exc}")

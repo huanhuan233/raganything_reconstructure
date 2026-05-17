@@ -83,7 +83,7 @@ async def main() -> None:
                     "entity_extract_max_gleaning": 1,
                     "language": "auto",
                     "include_multimodal_chunks": True,
-                    "max_chunks": 50,
+                    "max_chunks": 0,
                 },
             },
             {"id": "end", "type": "workflow.end", "config": {}},

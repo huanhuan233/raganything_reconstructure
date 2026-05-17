@@ -24,7 +24,8 @@ const defaultVector = () => ({
   metric_type: 'COSINE',
   index_type: 'IVF_FLAT',
   auto_create_index: true,
-  create_if_missing: false
+  create_if_missing: false,
+  milvus_batch_size: 50
 });
 
 const milvusLoading = ref(false);
@@ -63,7 +64,13 @@ const vectorNewMode = computed({
 
 const debouncedPushVector = useDebounceFn(() => {
   const dim = Number(v.dimension);
-  emit('patch-field', 'vector_storage', { ...toRaw(v), dimension: dim > 0 ? dim : 0 });
+  const batchRaw = Number(v.milvus_batch_size);
+  const batch = Number.isFinite(batchRaw) && batchRaw >= 1 ? Math.floor(batchRaw) : 50;
+  emit('patch-field', 'vector_storage', {
+    ...toRaw(v),
+    dimension: dim > 0 ? dim : 0,
+    milvus_batch_size: batch
+  });
 }, 200);
 
 function pushVector() {
@@ -186,6 +193,20 @@ const milvusOptions = computed(() => milvusRows.value.map(r => ({ label: `${r.na
           <ElOption label="IVF_FLAT" value="IVF_FLAT" />
           <ElOption label="HNSW" value="HNSW" />
         </ElSelect>
+      </div>
+      <div class="rag-wf-storage-row">
+        <span class="rag-wf-storage-label">Milvus 批量写入条数</span>
+        <div class="rag-wf-storage-dim">
+          <ElInputNumber
+            v-model="v.milvus_batch_size"
+            :min="1"
+            :max="2048"
+            :step="1"
+            :controls="true"
+            @change="pushVector"
+          />
+          <span class="rag-wf-storage-hint">每条 embedding 记录一批 upsert；默认 50，增大可减少服务端 flush 次数。</span>
+        </div>
       </div>
     </div>
 

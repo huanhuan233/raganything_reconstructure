@@ -9,6 +9,7 @@ from runtime_kernel.execution_context.execution_context import ExecutionContext
 from runtime_kernel.entities.node_metadata import NodeConfigField, NodeMetadata
 from runtime_kernel.entities.node_result import NodeResult
 from runtime_kernel.node_runtime.base_node import BaseNode
+from runtime_kernel.runtime_state.payload_carry import slim_semantic_carry_payload
 
 
 class SemanticRelationPersistNode(BaseNode):
@@ -27,7 +28,8 @@ class SemanticRelationPersistNode(BaseNode):
         )
 
     async def run(self, input_data: Any, context: ExecutionContext) -> NodeResult:
-        payload = dict(input_data) if isinstance(input_data, dict) else {}
+        incoming = dict(input_data) if isinstance(input_data, dict) else {}
+        payload = slim_semantic_carry_payload(incoming)
         edges_raw = payload.get("semantic_relations") or payload.get("relations")
 
         plan = payload.get("semantic_plan") or context.semantic_plan

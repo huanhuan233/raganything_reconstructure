@@ -490,7 +490,8 @@ async function applyTemplateSelection() {
     templateDialogVisible.value = false;
     window.$message?.success('模板已创建到画布');
   } catch (e) {
-    window.$message?.error(messageFromAxios(e));
+    const msg = messageFromAxios(e);
+    window.$message?.error(msg.includes('timeout') ? `子模板加载失败：${msg}（请确认 backend_api 已启动）` : `子模板加载失败：${msg}`);
   } finally {
     templateApplying.value = false;
   }

@@ -23,6 +23,13 @@ const components = computed(() => {
   const rows = graph.value.connected_components;
   return Array.isArray(rows) ? (rows.filter(x => x && typeof x === 'object') as Record<string, unknown>[]).slice(0, 20) : [];
 });
+
+function chunkRefsDisplay(row: Record<string, unknown>): string {
+  const raw = row.chunk_refs;
+  if (raw === undefined) return '—';
+  if (!Array.isArray(raw)) return '—';
+  return String(raw.length);
+}
 </script>
 
 <template>
@@ -66,7 +73,7 @@ const components = computed(() => {
         </div>
         <div v-for="(r, idx) in entities" :key="`${idx}-${String(r.canonical_entity_id ?? '')}`" class="row row--entities">
           <div>{{ String(r.canonical_name ?? r.canonical_entity_id ?? '-') }}</div>
-          <div>{{ Array.isArray(r.chunk_refs) ? r.chunk_refs.length : 0 }}</div>
+          <div>{{ chunkRefsDisplay(r) }}</div>
         </div>
       </div>
     </div>

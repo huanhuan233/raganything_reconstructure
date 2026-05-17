@@ -25,7 +25,8 @@ export type KnowledgeDiscoverResponse = {
 export function fetchMilvusCollections() {
   return ragWorkflowRequest<StorageApiEnvelope<MilvusCollectionRow[]>>({
     url: '/api/storage/milvus/collections/',
-    method: 'get'
+    method: 'get',
+    timeout: 30000
   });
 }
 
@@ -39,7 +40,8 @@ export function fetchMilvusCollectionCreate(body: {
   return ragWorkflowRequest<StorageApiEnvelope<{ name: string }>>({
     url: '/api/storage/milvus/collections/',
     method: 'post',
-    data: body
+    data: body,
+    timeout: 60000
   });
 }
 
